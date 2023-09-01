@@ -5,7 +5,7 @@ const county_map_url = './COUNTY_MOI_1090820.json';
 const town_map_url = './TOWN_MOI_1120317.json';
 const temp_url = 'https://cwbopendata.s3.ap-northeast-1.amazonaws.com/DIV2/O-A0038-003.json';
 const rain_url = 'https://cwbopendata.s3.ap-northeast-1.amazonaws.com/DIV2/O-A0040-004.json';
-//const rain_url = 'https://cwbopendata.s3.ap-northeast-1.amazonaws.com/MSC/O-B0045-001.json';
+//const qpesums_url = 'https://cwbopendata.s3.ap-northeast-1.amazonaws.com/MSC/O-B0045-001.json';
 
 svg.call(d3.zoom().on("zoom",() => {
 	g.attr("transform", d3.event.transform);
@@ -82,16 +82,43 @@ function cmap(cmap, value) {
 	}
 }
 
-async function draw(option='溫度') {
-	d3.selectAll("path").remove();
-	d3.selectAll("rect").remove();
+async function draw_map() {
+	[county_map_data, town_map_data] = await Promise.all([
+		d3.json(county_map_url),
+		d3.json(town_map_url),
+	])
 	
-	if (typeof county_map_data === 'undefined' || typeof town_map_data === 'undefined') {
-		[county_map_data, town_map_data] = await Promise.all([
-			d3.json(county_map_url),
-			d3.json(town_map_url),
-		])
-	}
+	//Town Map
+	geometries = topojson.feature(town_map_data, town_map_data.objects["TOWN_MOI_1120317"])
+	g.append("path1")
+	paths1 = g.selectAll("path1").data(geometries.features);
+	paths1.enter()
+		.append("path")
+		.attr("d", pathGenerator)
+		.attr("class","town")
+		.style('pointer-events', 'none')
+		.on("click", function(d) {
+			console.log(projection.invert(d3.mouse(this)));
+			d3.select('#tooltip').style('opacity', 1).html('<div class="custom_tooltip">' + d.properties["COUNTYNAME"] + '_' + d.properties["TOWNNAME"] + '</div>')
+		})
+		
+	//County Map
+	geometries = topojson.feature(county_map_data, county_map_data.objects["COUNTY_MOI_1090820"])
+	g.append("path2")
+	paths2 = g.selectAll("path2").data(geometries.features);
+	paths2.enter()
+		.append("path")
+		.attr("d", pathGenerator)
+		.attr("class","county")
+		.style('pointer-events', 'none')
+		.on("click", function(d) {
+			console.log(projection.invert(d3.mouse(this)));
+			d3.select('#tooltip').style('opacity', 1).html('<div class="custom_tooltip">' + d.properties["COUNTYNAME"] + '_' + d.properties["TOWNNAME"] + '</div>')
+		})
+}
+
+async function draw(option='溫度') {
+	d3.selectAll("rect").remove();
 	
 	[temp_data, rain_data] = await Promise.all([
 		d3.json(temp_url),
@@ -127,34 +154,9 @@ async function draw(option='溫度') {
 		.on("mouseout", function(d) {
 			d3.select('#tooltip').style('opacity', 0)
 		})
-		
-	//Town Map
-	geometries = topojson.feature(town_map_data, town_map_data.objects["TOWN_MOI_1120317"])
-	g.append("path1")
-	paths1 = g.selectAll("path1").data(geometries.features);
-	paths1.enter()
-		.append("path")
-		.attr("d", pathGenerator)
-		.attr("class","town")
-		.style('pointer-events', 'none')
-		.on("click", function(d) {
-			console.log(projection.invert(d3.mouse(this)));
-			d3.select('#tooltip').style('opacity', 1).html('<div class="custom_tooltip">' + d.properties["COUNTYNAME"] + '_' + d.properties["TOWNNAME"] + '</div>')
-		})
-		
-	//County Map
-	geometries = topojson.feature(county_map_data, county_map_data.objects["COUNTY_MOI_1090820"])
-	g.append("path2")
-	paths2 = g.selectAll("path2").data(geometries.features);
-	paths2.enter()
-		.append("path")
-		.attr("d", pathGenerator)
-		.attr("class","county")
-		.style('pointer-events', 'none')
-		.on("click", function(d) {
-			console.log(projection.invert(d3.mouse(this)));
-			d3.select('#tooltip').style('opacity', 1).html('<div class="custom_tooltip">' + d.properties["COUNTYNAME"] + '_' + d.properties["TOWNNAME"] + '</div>')
-		})
+		.lower()
+		.lower(); 
 }
 
+draw_map();
 draw();
