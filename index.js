@@ -100,10 +100,16 @@ async function draw_map() {
 		.attr("d", pathGenerator)
 		.attr("class","town")
 		.style('pointer-events', 'none')
-		.on("click", function(d) {
-			console.log(projection.invert(d3.mouse(this)));
-			d3.select('#tooltip').style('opacity', 1).html('<div class="custom_tooltip">' + d.properties["COUNTYNAME"] + '_' + d.properties["TOWNNAME"] + '</div>')
+		.on("mouseover", function(d) {
+			lon_lat = projection.invert(d3.mouse(this))
+			d3.select('#tooltip').style('opacity', 1).html('<div class="custom_tooltip">' + lon_lat[0].toFixed(2) + ', ' + lon_lat[1].toFixed(2) + '<br>' + d.properties["COUNTYNAME"] + '_' + d.properties["TOWNNAME"] + '</div>')
 		})
+		.on("mousemove", function(d) {
+			d3.select('#tooltip').style('left', (d3.event.pageX+10) + 'px').style('top', (d3.event.pageY+10) + 'px')
+		})
+		.on("mouseout", function(d) {
+			d3.select('#tooltip').style('opacity', 0)
+		});
 		
 	//County Map
 	geometries = topojson.feature(county_map_data, county_map_data.objects["COUNTY_MOI_1090820"])
@@ -121,7 +127,6 @@ async function draw() {
 	
 	option = document.getElementById("product").value
 	
-	//Temp Data
 	if (option == '雨量GT') {
 		[rawdata] = await Promise.all([d3.json(rain_url)]);
 		data = data_proc(rawdata, -1, -1);
@@ -169,5 +174,24 @@ async function draw() {
 	document.body.style.cursor = 'default'
 }
 
+document.onmousedown = function(e) {
+	if (e.which == 3) {
+		d3.select('#tooltip').style('opacity', 0)
+		d3.selectAll(".town").style('pointer-events', 'auto');
+	}
+};
+document.onmouseup = function(e) {
+	if (e.which == 3) {
+		d3.select('#tooltip').style('opacity', 0)
+		d3.selectAll(".town").style('pointer-events', 'none');
+	}
+};
+document.addEventListener('contextmenu', function(e) {
+	e.preventDefault();
+	return false;
+}, false); 
+
 draw_map();
 draw();
+
+window.setInterval(draw, 300*1000);
