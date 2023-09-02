@@ -54,7 +54,8 @@ function data_proc(data, nan_value, fix=0, offset=0) {
 		lat = lat0 + (y * dx) + 0.02; //HACK: TWD64 to TWD97
 		cx_cy = projection([lon, lat]);
 		
-		if (parseInt(value, 10) != nan_value) {
+		if (parseInt(value, 10) > nan_value) {
+			print(parseInt(value, 10) , nan_value)
 			data_out.push({
 				'cx': cx_cy[0],
 				'cy': cx_cy[1],
@@ -123,25 +124,22 @@ async function draw_map() {
 async function draw(option='溫度GT') {
 	d3.selectAll("rect").remove();
 	
-	[temp_data, rain_data, qpesums_rain_data, qpesums_radar_data] = await Promise.all([
-		d3.json(temp_url),
-		d3.json(rain_url),
-		d3.json(qpesums_rain_url),
-		d3.json(qpesums_radar_url),
-	])
-	
 	//Temp Data
 	if (option == '雨量GT') {
-		data = data_proc(rain_data, -1, -1);
+		[rawdata] = await Promise.all([d3.json(rain_url)]);
+		data = data_proc(rawdata, -1, -1);
 		cb = raincb;
 	} else if (option == '溫度GT') {
-		data = data_proc(temp_data, -999, -1);
+		[rawdata] = await Promise.all([d3.json(temp_url)]);
+		data = data_proc(rawdata, -999, -1);
 		cb = tempcb;
 	} else if (option == 'QPESUMS雨量') {
-		data = data_proc(qpesums_rain_data, -1);
+		[rawdata] = await Promise.all([d3.json(qpesums_rain_url)]);
+		data = data_proc(rawdata, -1);
 		cb = raincb;
 	} else if (option == 'QPESUMS回波') {
-		data = data_proc(qpesums_radar_data, -999, 0, 1);
+		[rawdata] = await Promise.all([d3.json(qpesums_radar_url)]);
+		data = data_proc(rawdata, -9, 0, 1);
 		cb = radarcb;
 	}
 	
