@@ -16,7 +16,7 @@ svg.call(d3.zoom().on("zoom",() => {
 var projection = d3.geoMercator().center([121, 24.15]).scale(11000);
 var pathGenerator = d3.geoPath().projection(projection);
 
-var svg = d3.select("#rect").append("svg")
+var svg = d3.select("#rect").append("svg");
 
 d3.select('body')
 	.append('div')
@@ -89,11 +89,11 @@ async function draw_map() {
 	[county_map_data, town_map_data] = await Promise.all([
 		d3.json(county_map_url),
 		d3.json(town_map_url),
-	])
+	]);
 	
 	//Town Map
-	geometries = topojson.feature(town_map_data, town_map_data.objects["TOWN_MOI_1120317"])
-	g.append("path1")
+	geometries = topojson.feature(town_map_data, town_map_data.objects["TOWN_MOI_1120317"]);
+	g.append("path1");
 	paths1 = g.selectAll("path1").data(geometries.features);
 	paths1.enter()
 		.append("path")
@@ -101,14 +101,14 @@ async function draw_map() {
 		.attr("class","town")
 		.style('pointer-events', 'none')
 		.on("mouseover", function(d) {
-			lon_lat = projection.invert(d3.mouse(this))
-			d3.select('#tooltip').style('opacity', 1).html('<div class="custom_tooltip">' + lon_lat[0].toFixed(2) + ', ' + lon_lat[1].toFixed(2) + '<br>' + d.properties["COUNTYNAME"] + '_' + d.properties["TOWNNAME"] + '</div>')
+			lon_lat = projection.invert(d3.mouse(this));
+			d3.select('#tooltip').style('opacity', 1).html('<div class="custom_tooltip">' + lon_lat[0].toFixed(2) + ', ' + lon_lat[1].toFixed(2) + '<br>' + d.properties["COUNTYNAME"] + '_' + d.properties["TOWNNAME"] + '</div>');
 		})
 		.on("mousemove", function(d) {
-			d3.select('#tooltip').style('left', (d3.event.pageX+10) + 'px').style('top', (d3.event.pageY+10) + 'px')
+			d3.select('#tooltip').style('left', (d3.event.pageX+10) + 'px').style('top', (d3.event.pageY+10) + 'px');
 		})
 		.on("mouseout", function(d) {
-			d3.select('#tooltip').style('opacity', 0)
+			d3.select('#tooltip').style('opacity', 0);
 		});
 		
 	//County Map
@@ -122,10 +122,10 @@ async function draw_map() {
 		.style('pointer-events', 'none')
 }
 
-async function draw() {
-	document.body.style.cursor = 'wait'
+async function plot_data() {
+	d3.select('body').style('cursor', 'wait');
 	
-	option = document.getElementById("product").value
+	option = d3.select('#product').property("value");
 	
 	if (option == '雨量GT') {
 		[rawdata] = await Promise.all([d3.json(rain_url)]);
@@ -161,28 +161,28 @@ async function draw() {
 		.attr('height', function(d) {return d['size']+1})
 		.style('fill', function(d) {return cmap(cb, d['data'])})
 		.on("mouseover", function(d) {
-			d3.select('#tooltip').style('opacity', 1).html('<div class="custom_tooltip">' + d['lon'] + ', ' + d['lat'] + '<br>' + d['data'] + ' ' + d['unit'] + '</div>')
+			d3.select('#tooltip').style('opacity', 1).html('<div class="custom_tooltip">' + d['lon'] + ', ' + d['lat'] + '<br>' + d['data'] + ' ' + d['unit'] + '</div>');
 		})
 		.on("mousemove", function(d) {
-			d3.select('#tooltip').style('left', (d3.event.pageX+10) + 'px').style('top', (d3.event.pageY+10) + 'px')
+			d3.select('#tooltip').style('left', (d3.event.pageX+10) + 'px').style('top', (d3.event.pageY+10) + 'px');
 		})
 		.on("mouseout", function(d) {
-			d3.select('#tooltip').style('opacity', 0)
+			d3.select('#tooltip').style('opacity', 0);
 		})
 		.lower()
 		.lower(); 
-	document.body.style.cursor = 'default'
+	d3.select('body').style('cursor', 'default');
 }
 
 document.onmousedown = function(e) {
 	if (e.which == 3) {
-		d3.select('#tooltip').style('opacity', 0)
+		d3.select('#tooltip').style('opacity', 0);
 		d3.selectAll(".town").style('pointer-events', 'auto');
 	}
 };
 document.onmouseup = function(e) {
 	if (e.which == 3) {
-		d3.select('#tooltip').style('opacity', 0)
+		d3.select('#tooltip').style('opacity', 0);
 		d3.selectAll(".town").style('pointer-events', 'none');
 	}
 };
@@ -192,6 +192,6 @@ document.addEventListener('contextmenu', function(e) {
 }, false); 
 
 draw_map();
-draw();
+plot_data();
 
-window.setInterval(draw, 300*1000);
+window.setInterval(plot_data, 180*1000);
