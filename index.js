@@ -9,6 +9,8 @@ const rain_url = 'https://cwbopendata.s3.ap-northeast-1.amazonaws.com/DIV2/O-A00
 const qpesums_rain_url = 'https://cwbopendata.s3.ap-northeast-1.amazonaws.com/MSC/O-B0045-001.json';
 const qpesums_radar_url = 'https://cwbopendata.s3.ap-northeast-1.amazonaws.com/MSC/O-A0059-001.json';
 
+const sta_data_url = 'https://cwbopendata.s3.ap-northeast-1.amazonaws.com/DIV2/O-A0001-001.json';
+
 svg.call(d3.zoom().on("zoom",() => {
 	g.attr("transform", d3.event.transform);
 }));
@@ -25,6 +27,32 @@ d3.select('body')
 
 function print(...data) {
 	console.log(data);
+}
+
+function sta_data_proc(data, nan_value, data_type) {
+	data_out = [];
+	data = data['cwbopendata']['location'];
+	data.forEach(function(sta){
+		lon = parseFloat(sta['lon']);
+		lat = parseFloat(sta['lat']);
+		cx_cy = projection([lon, lat]);
+		weather = sta['weatherElement'];
+		
+		data = (data_type == 'rain') ? weather[6]['elementValue']['value'] : weather[3]['elementValue']['value'];
+		if (parseFloat(data) > nan_value) {
+			data_out.push({
+				'cx': cx_cy[0],
+				'cy': cx_cy[1],
+				'lon': lon.toFixed(2),
+				'lat': lat.toFixed(2),
+				'name': sta['locationName'],
+				'code': sta['stationId'],
+				'elev': parseFloat(weather[0]['elementValue']['value']),
+				'data': parseFloat(data),
+			});
+		}
+	});
+	return data_out
 }
 
 function data_proc(data, nan_value, fix=0, offset=0) {
@@ -128,25 +156,31 @@ async function plot_data() {
 	option = d3.select('#product').property("value");
 	
 	if (option == '雨量GT') {
-		[rawdata] = await Promise.all([d3.json(rain_url)]);
+		[rawdata, stadata] = await Promise.all([d3.json(rain_url), d3.json(sta_data_url)]);
 		data = data_proc(rawdata, -1, -1);
+		sta_data = sta_data_proc(stadata, -99, 'rain');
 		cb = raincb;
 	} else if (option == '溫度GT') {
-		[rawdata] = await Promise.all([d3.json(temp_url)]);
+		[rawdata, stadata] = await Promise.all([d3.json(temp_url), d3.json(sta_data_url)]);
 		data = data_proc(rawdata, -999, -1);
+		sta_data = sta_data_proc(stadata, -99, 'temp');
 		cb = tempcb;
 	} else if (option == 'QPESUMS雨量') {
 		[rawdata] = await Promise.all([d3.json(qpesums_rain_url)]);
 		data = data_proc(rawdata, -1);
+		sta_data = null;
 		cb = raincb;
 	} else if (option == 'QPESUMS回波') {
 		[rawdata] = await Promise.all([d3.json(qpesums_radar_url)]);
 		data = data_proc(rawdata, -99, 0, 1);
+		sta_data = null;
 		cb = radarcb;
 	}
-	
+
 	d3.selectAll("rect").remove();
+	d3.selectAll(".sta").remove();
 	
+	//Grid data
 	g.selectAll("circle")
 		.data(data)
 		.enter()
@@ -171,16 +205,58 @@ async function plot_data() {
 		})
 		.lower()
 		.lower(); 
+		
+	//Station Data
+	if (sta_data) {
+		g.selectAll("text")
+			.data(sta_data)
+			.enter()
+			.append("svg:text")
+			.attr("x", function(d) {
+				return d['cx'];
+			})
+			.attr("y", function(d) {
+				return d['cy'];
+			})
+			.text(function(d){
+				return d['data'];
+			})
+			.on("mouseover", function(d) {
+				d3.select('#tooltip').style('opacity', 1).html('<div class="custom_tooltip">' + d['lon'] + ', ' + d['lat'] + '<br>' + d['code'] + '_' + d['name'] + '<br>' + d['elev'] + ' m</div>');
+			})
+			.on("mousemove", function(d) {
+				d3.select('#tooltip').style('left', (d3.event.pageX+10) + 'px').style('top', (d3.event.pageY+10) + 'px');
+			})
+			.on("mouseout", function(d) {
+				d3.select('#tooltip').style('opacity', 0);
+			})
+			.attr("text-anchor","middle")
+			.attr('font-size','5px')
+			.style('pointer-events', 'none')
+			.attr("class","sta")
+			.raise()
+			.raise()
+			.raise();		
+	}
+		
 	d3.select('body').style('cursor', 'default');
 }
 
 document.onmousedown = function(e) {
+	if (e.which == 2) {
+		d3.select('#tooltip').style('opacity', 0);
+		d3.selectAll(".sta").style('pointer-events', 'auto');
+	}
 	if (e.which == 3) {
 		d3.select('#tooltip').style('opacity', 0);
 		d3.selectAll(".town").style('pointer-events', 'auto');
 	}
 };
 document.onmouseup = function(e) {
+	if (e.which == 2) {
+		d3.select('#tooltip').style('opacity', 0);
+		d3.selectAll(".sta").style('pointer-events', 'none');
+	}
 	if (e.which == 3) {
 		d3.select('#tooltip').style('opacity', 0);
 		d3.selectAll(".town").style('pointer-events', 'none');
