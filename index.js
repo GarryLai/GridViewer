@@ -76,7 +76,7 @@ function data_proc(data, nan_value) {
 
 function cmap(cmap, value) {
 	for (const [key, color] of Object.entries(cmap)) {
-		if (value < key) {
+		if (value < parseFloat(key)) {
 			return color;
 		}
 	}
@@ -128,8 +128,10 @@ async function draw(option='溫度') {
 	//Temp Data
 	if (option == '雨量') {
 		data = data_proc(rain_data, -1);
+		cb = raincb;
 	} else if (option == '溫度') {
 		data = data_proc(temp_data, -999);
+		cb = tempcb;
 	}
 	
 	g.selectAll("circle")
@@ -144,7 +146,7 @@ async function draw(option='溫度') {
 		})
 		.attr('width', 6)
 		.attr('height', 6.5)
-		.style('fill', function(d) {return cmap(tempcb, d['data'])})
+		.style('fill', function(d) {return cmap(cb, d['data'])})
 		.on("mouseover", function(d) {
 			d3.select('#tooltip').style('opacity', 1).html('<div class="custom_tooltip">' + d['lon'] + ', ' + d['lat'] + '<br>' + d['data'] + ' ' + d['unit'] + '</div>')
 		})
