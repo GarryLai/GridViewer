@@ -54,7 +54,7 @@ function data_proc(data, nan_value, fix=0, offset=0) {
 		lat = lat0 + (y * dx) + 0.02; //HACK: TWD64 to TWD97
 		cx_cy = projection([lon, lat]);
 		
-		if (parseInt(value, 10) > nan_value) {
+		if (parseFloat(value) > nan_value) {
 			data_out.push({
 				'cx': cx_cy[0],
 				'cy': cx_cy[1],
@@ -100,10 +100,16 @@ async function draw_map() {
 		.attr("d", pathGenerator)
 		.attr("class","town")
 		.style('pointer-events', 'none')
-		.on("click", function(d) {
-			console.log(projection.invert(d3.mouse(this)));
-			d3.select('#tooltip').style('opacity', 1).html('<div class="custom_tooltip">' + d.properties["COUNTYNAME"] + '_' + d.properties["TOWNNAME"] + '</div>')
+		.on("mouseover", function(d) {
+			lon_lat = projection.invert(d3.mouse(this))
+			d3.select('#tooltip').style('opacity', 1).html('<div class="custom_tooltip">' + lon_lat[0].toFixed(2) + ', ' + lon_lat[1].toFixed(2) + '<br>' + d.properties["COUNTYNAME"] + '_' + d.properties["TOWNNAME"] + '</div>')
 		})
+		.on("mousemove", function(d) {
+			d3.select('#tooltip').style('left', (d3.event.pageX+10) + 'px').style('top', (d3.event.pageY+10) + 'px')
+		})
+		.on("mouseout", function(d) {
+			d3.select('#tooltip').style('opacity', 0)
+		});
 		
 	//County Map
 	geometries = topojson.feature(county_map_data, county_map_data.objects["COUNTY_MOI_1090820"])
@@ -114,16 +120,13 @@ async function draw_map() {
 		.attr("d", pathGenerator)
 		.attr("class","county")
 		.style('pointer-events', 'none')
-		.on("click", function(d) {
-			console.log(projection.invert(d3.mouse(this)));
-			d3.select('#tooltip').style('opacity', 1).html('<div class="custom_tooltip">' + d.properties["COUNTYNAME"] + '_' + d.properties["TOWNNAME"] + '</div>')
-		})
 }
 
-async function draw(option='溫度GT') {
-	d3.selectAll("rect").remove();
+async function draw() {
+	document.body.style.cursor = 'wait'
 	
-	//Temp Data
+	option = document.getElementById("product").value
+	
 	if (option == '雨量GT') {
 		[rawdata] = await Promise.all([d3.json(rain_url)]);
 		data = data_proc(rawdata, -1, -1);
@@ -138,9 +141,11 @@ async function draw(option='溫度GT') {
 		cb = raincb;
 	} else if (option == 'QPESUMS回波') {
 		[rawdata] = await Promise.all([d3.json(qpesums_radar_url)]);
-		data = data_proc(rawdata, -9, 0, 1);
+		data = data_proc(rawdata, -99, 0, 1);
 		cb = radarcb;
 	}
+	
+	d3.selectAll("rect").remove();
 	
 	g.selectAll("circle")
 		.data(data)
@@ -166,7 +171,27 @@ async function draw(option='溫度GT') {
 		})
 		.lower()
 		.lower(); 
+	document.body.style.cursor = 'default'
 }
+
+document.onmousedown = function(e) {
+	if (e.which == 3) {
+		d3.select('#tooltip').style('opacity', 0)
+		d3.selectAll(".town").style('pointer-events', 'auto');
+	}
+};
+document.onmouseup = function(e) {
+	if (e.which == 3) {
+		d3.select('#tooltip').style('opacity', 0)
+		d3.selectAll(".town").style('pointer-events', 'none');
+	}
+};
+document.addEventListener('contextmenu', function(e) {
+	e.preventDefault();
+	return false;
+}, false); 
 
 draw_map();
 draw();
+
+window.setInterval(draw, 300*1000);
