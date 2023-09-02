@@ -6,6 +6,7 @@ const town_map_url = './TOWN_MOI_1120317.json';
 
 const temp_url = 'https://cwbopendata.s3.ap-northeast-1.amazonaws.com/DIV2/O-A0038-003.json';
 const rain_url = 'https://cwbopendata.s3.ap-northeast-1.amazonaws.com/DIV2/O-A0040-004.json';
+
 const qpesums_rain_url = 'https://cwbopendata.s3.ap-northeast-1.amazonaws.com/MSC/O-B0045-001.json';
 const qpesums_radar_url = 'https://cwbopendata.s3.ap-northeast-1.amazonaws.com/MSC/O-A0059-001.json';
 
@@ -44,8 +45,8 @@ function sta_data_proc(data, nan_value, data_type) {
 			data_out.push({
 				'cx': cx_cy[0],
 				'cy': cx_cy[1],
-				'lon': lon.toFixed(2),
-				'lat': lat.toFixed(2),
+				'lon': sta['lon'],
+				'lat': sta['lat'],
 				'name': sta['locationName'],
 				'code': sta['stationId'],
 				'elev': parseFloat(weather[0]['elementValue']['value']),
@@ -263,19 +264,27 @@ document.onmousedown = function(e) {
 	if (e.which == 2) {
 		d3.select('#tooltip').style('opacity', 0);
 		d3.selectAll(".sta").style('pointer-events', 'auto');
+		d3.selectAll(".town").style('pointer-events', 'none');
+		d3.selectAll("rect").style('pointer-events', 'none');
 	}
 	if (e.which == 3) {
 		d3.select('#tooltip').style('opacity', 0);
 		d3.selectAll(".town").style('pointer-events', 'auto');
+		d3.selectAll(".sta").style('pointer-events', 'none');
+		d3.selectAll("rect").style('pointer-events', 'none');
 	}
 };
 document.onmouseup = function(e) {
 	if (e.which == 2) {
 		d3.select('#tooltip').style('opacity', 0);
+		d3.selectAll("rect").style('pointer-events', 'auto');
 		d3.selectAll(".sta").style('pointer-events', 'none');
+		d3.selectAll(".town").style('pointer-events', 'none');
 	}
 	if (e.which == 3) {
 		d3.select('#tooltip').style('opacity', 0);
+		d3.selectAll("rect").style('pointer-events', 'auto');
+		d3.selectAll(".sta").style('pointer-events', 'none');
 		d3.selectAll(".town").style('pointer-events', 'none');
 	}
 };
