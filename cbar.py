@@ -1,10 +1,6 @@
 from pylab import *
 import cwbplot.cwb_colorbar as cwbcolor
 
-tempcb = cwbcolor.surfT()
-raincb = cwbcolor.rain()
-#print(raincb)
-
 def do(raincb):
 	cmap = raincb['cmap']
 	for i in range(cmap.N):
@@ -16,9 +12,13 @@ def do(raincb):
 			print("'" + str('9999') + "': '" + matplotlib.colors.rgb2hex(rgba) + "',")
 			
 print('const tempcb = {')
-do(tempcb)
+do(cwbcolor.surfT())
 print('};')
 
 print('const raincb = {')
-do(raincb)
+do(cwbcolor.rain())
+print('};')
+
+print('const radarcb = {')
+do(cwbcolor.radar())
 print('};')
