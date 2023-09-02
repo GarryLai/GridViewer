@@ -152,6 +152,7 @@ async function draw_map() {
 
 async function plot_data() {
 	d3.select('body').style('cursor', 'wait');
+	d3.selectAll("select").attr('disabled', '1');
 	
 	option = d3.select('#product').property("value");
 	
@@ -240,6 +241,7 @@ async function plot_data() {
 	}
 		
 	d3.select('body').style('cursor', 'default');
+	d3.selectAll("select").attr('disabled', null);
 }
 
 document.onmousedown = function(e) {
