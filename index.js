@@ -121,6 +121,8 @@ async function draw_map() {
 }
 
 async function draw(option='溫度GT') {
+	document.body.style.cursor = 'wait'
+	
 	d3.selectAll("rect").remove();
 	
 	//Temp Data
@@ -166,6 +168,7 @@ async function draw(option='溫度GT') {
 		})
 		.lower()
 		.lower(); 
+	document.body.style.cursor = 'default'
 }
 
 draw_map();
