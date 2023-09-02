@@ -9,7 +9,8 @@ const rain_url = 'https://cwbopendata.s3.ap-northeast-1.amazonaws.com/DIV2/O-A00
 const qpesums_rain_url = 'https://cwbopendata.s3.ap-northeast-1.amazonaws.com/MSC/O-B0045-001.json';
 const qpesums_radar_url = 'https://cwbopendata.s3.ap-northeast-1.amazonaws.com/MSC/O-A0059-001.json';
 
-const sta_data_url = 'https://cwbopendata.s3.ap-northeast-1.amazonaws.com/DIV2/O-A0001-001.json';
+const auto_sta_data_url = 'https://cwbopendata.s3.ap-northeast-1.amazonaws.com/DIV2/O-A0001-001.json';
+const sta_data_url = 'https://cwbopendata.s3.ap-northeast-1.amazonaws.com/DIV2/O-A0003-001.json';
 
 svg.call(d3.zoom().on("zoom",() => {
 	g.attr("transform", d3.event.transform);
@@ -101,7 +102,7 @@ function data_proc(data, nan_value, fix=0, offset=0) {
 		}
 	});
 	
-	document.getElementById("info").innerHTML = "<b>" + valid_time + '</b>';
+	d3.select('#info').html('<b>' + valid_time + '</b>');
 	return data_out;
 }
 
@@ -150,38 +151,7 @@ async function draw_map() {
 		.style('pointer-events', 'none')
 }
 
-async function plot_data() {
-	d3.select('body').style('cursor', 'wait');
-	d3.selectAll("select").attr('disabled', '1');
-	
-	option = d3.select('#product').property("value");
-	
-	if (option == '雨量GT') {
-		[rawdata, stadata] = await Promise.all([d3.json(rain_url), d3.json(sta_data_url)]);
-		data = data_proc(rawdata, -1, -1);
-		sta_data = sta_data_proc(stadata, -99, 'rain');
-		cb = raincb;
-	} else if (option == '溫度GT') {
-		[rawdata, stadata] = await Promise.all([d3.json(temp_url), d3.json(sta_data_url)]);
-		data = data_proc(rawdata, -999, -1);
-		sta_data = sta_data_proc(stadata, -99, 'temp');
-		cb = tempcb;
-	} else if (option == 'QPESUMS雨量') {
-		[rawdata] = await Promise.all([d3.json(qpesums_rain_url)]);
-		data = data_proc(rawdata, -1);
-		sta_data = null;
-		cb = raincb;
-	} else if (option == 'QPESUMS回波') {
-		[rawdata] = await Promise.all([d3.json(qpesums_radar_url)]);
-		data = data_proc(rawdata, -99, 0, 1);
-		sta_data = null;
-		cb = radarcb;
-	}
-
-	d3.selectAll("rect").remove();
-	d3.selectAll(".sta").remove();
-	
-	//Grid data
+function plot_grid_data(data) {
 	g.selectAll("circle")
 		.data(data)
 		.enter()
@@ -206,41 +176,86 @@ async function plot_data() {
 		})
 		.lower()
 		.lower(); 
+}
+
+function plot_sta_data(data) {
+	g.selectAll("text")
+		.data(sta_data)
+		.enter()
+		.append("svg:text")
+		.attr("x", function(d) {
+			return d['cx'];
+		})
+		.attr("y", function(d) {
+			return d['cy'];
+		})
+		.text(function(d){
+			return d['data'];
+		})
+		.on("mouseover", function(d) {
+			d3.select('#tooltip').style('opacity', 1).html('<div class="custom_tooltip">' + d['lon'] + ', ' + d['lat'] + '<br>' + d['code'] + '_' + d['name'] + '<br>' + d['elev'] + ' m</div>');
+		})
+		.on("mousemove", function(d) {
+			d3.select('#tooltip').style('left', (d3.event.pageX+10) + 'px').style('top', (d3.event.pageY+10) + 'px');
+		})
+		.on("mouseout", function(d) {
+			d3.select('#tooltip').style('opacity', 0);
+		})
+		.attr("text-anchor","middle")
+		.attr('font-size','5px')
+		.style('pointer-events', 'none')
+		.attr("class","sta")
+		.raise()
+		.raise()
+		.raise();
+}
+
+async function plot_data() {
+	//d3.select('body').style('cursor', 'wait');
+	d3.selectAll("select").attr('disabled', '1');
+	d3.select('#info').html('<font color="red"><b>資料載入中，請稍後...<b></font>');
+	
+	option = d3.select('#product').property("value");
+	
+	if (option == '雨量GT') {
+		[rawdata, stadata, autostadata] = await Promise.all([d3.json(rain_url), d3.json(sta_data_url), d3.json(auto_sta_data_url)]);
+		data = data_proc(rawdata, -1, -1);
+		sta_data = sta_data_proc(stadata, -99, 'rain');
+		auto_sta_data = sta_data_proc(stadata, -99, 'rain');
+		cb = raincb;
+	} else if (option == '溫度GT') {
+		[rawdata, stadata, autostadata] = await Promise.all([d3.json(temp_url), d3.json(sta_data_url), d3.json(auto_sta_data_url)]);
+		data = data_proc(rawdata, -999, -1);
+		sta_data = sta_data_proc(stadata, -99, 'temp');
+		auto_sta_data = sta_data_proc(stadata, -99, 'temp');
+		cb = tempcb;
+	} else if (option == 'QPESUMS雨量') {
+		[rawdata] = await Promise.all([d3.json(qpesums_rain_url)]);
+		data = data_proc(rawdata, -1);
+		sta_data = null;
+		auto_sta_data = null;
+		cb = raincb;
+	} else if (option == 'QPESUMS回波') {
+		[rawdata] = await Promise.all([d3.json(qpesums_radar_url)]);
+		data = data_proc(rawdata, -99, 0, 1);
+		sta_data = null;
+		auto_sta_data = null;
+		cb = radarcb;
+	}
+
+	d3.selectAll("rect").remove();
+	d3.selectAll(".sta").remove();
+	
+	//Grid data
+	plot_grid_data(data);
 		
 	//Station Data
-	if (sta_data) {
-		g.selectAll("text")
-			.data(sta_data)
-			.enter()
-			.append("svg:text")
-			.attr("x", function(d) {
-				return d['cx'];
-			})
-			.attr("y", function(d) {
-				return d['cy'];
-			})
-			.text(function(d){
-				return d['data'];
-			})
-			.on("mouseover", function(d) {
-				d3.select('#tooltip').style('opacity', 1).html('<div class="custom_tooltip">' + d['lon'] + ', ' + d['lat'] + '<br>' + d['code'] + '_' + d['name'] + '<br>' + d['elev'] + ' m</div>');
-			})
-			.on("mousemove", function(d) {
-				d3.select('#tooltip').style('left', (d3.event.pageX+10) + 'px').style('top', (d3.event.pageY+10) + 'px');
-			})
-			.on("mouseout", function(d) {
-				d3.select('#tooltip').style('opacity', 0);
-			})
-			.attr("text-anchor","middle")
-			.attr('font-size','5px')
-			.style('pointer-events', 'none')
-			.attr("class","sta")
-			.raise()
-			.raise()
-			.raise();		
+	if (sta_data && auto_sta_data) {
+		plot_sta_data(sta_data);
+		plot_sta_data(auto_sta_data);
 	}
 		
-	d3.select('body').style('cursor', 'default');
+	//d3.select('body').style('cursor', 'default');
 	d3.selectAll("select").attr('disabled', null);
 }
 
