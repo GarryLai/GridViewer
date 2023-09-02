@@ -54,7 +54,7 @@ function data_proc(data, nan_value, fix=0, offset=0) {
 		lat = lat0 + (y * dx) + 0.02; //HACK: TWD64 to TWD97
 		cx_cy = projection([lon, lat]);
 		
-		if (parseInt(value, 10) > nan_value) {
+		if (parseFloat(value) > nan_value) {
 			data_out.push({
 				'cx': cx_cy[0],
 				'cy': cx_cy[1],
@@ -114,16 +114,12 @@ async function draw_map() {
 		.attr("d", pathGenerator)
 		.attr("class","county")
 		.style('pointer-events', 'none')
-		.on("click", function(d) {
-			console.log(projection.invert(d3.mouse(this)));
-			d3.select('#tooltip').style('opacity', 1).html('<div class="custom_tooltip">' + d.properties["COUNTYNAME"] + '_' + d.properties["TOWNNAME"] + '</div>')
-		})
 }
 
-async function draw(option='溫度GT') {
+async function draw() {
 	document.body.style.cursor = 'wait'
 	
-	d3.selectAll("rect").remove();
+	option = document.getElementById("product").value
 	
 	//Temp Data
 	if (option == '雨量GT') {
@@ -140,9 +136,11 @@ async function draw(option='溫度GT') {
 		cb = raincb;
 	} else if (option == 'QPESUMS回波') {
 		[rawdata] = await Promise.all([d3.json(qpesums_radar_url)]);
-		data = data_proc(rawdata, -9, 0, 1);
+		data = data_proc(rawdata, -99, 0, 1);
 		cb = radarcb;
 	}
+	
+	d3.selectAll("rect").remove();
 	
 	g.selectAll("circle")
 		.data(data)
