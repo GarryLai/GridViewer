@@ -55,7 +55,6 @@ function data_proc(data, nan_value, fix=0, offset=0) {
 		cx_cy = projection([lon, lat]);
 		
 		if (parseInt(value, 10) > nan_value) {
-			print(parseInt(value, 10) , nan_value)
 			data_out.push({
 				'cx': cx_cy[0],
 				'cy': cx_cy[1],
