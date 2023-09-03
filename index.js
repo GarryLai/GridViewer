@@ -261,7 +261,7 @@ async function plot_data() {
 		cb = raincb;
 	} else if (option == '雷達整合回波') {
 		[rawdata] = await Promise.all([d3.json(qpesums_radar_url)]);
-		data = data_proc(rawdata, -99, 0);
+		data = data_proc(rawdata, -99, 0, 1);
 		sta_data = [];
 		auto_sta_data = null;
 		cb = radarcb;
