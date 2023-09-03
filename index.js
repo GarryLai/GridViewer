@@ -11,6 +11,7 @@ const qpesums_rain_url = 'https://cwbopendata.s3.ap-northeast-1.amazonaws.com/MS
 const qpesums_radar_url = 'https://cwbopendata.s3.ap-northeast-1.amazonaws.com/MSC/O-A0059-001.json';
 
 const auto_sta_data_url = 'https://cwbopendata.s3.ap-northeast-1.amazonaws.com/DIV2/O-A0001-001.json';
+const auto_rain_data_url = 'https://cwbopendata.s3.ap-northeast-1.amazonaws.com/DIV2/O-A0002-001.json';
 const sta_data_url = 'https://cwbopendata.s3.ap-northeast-1.amazonaws.com/DIV2/O-A0003-001.json';
 
 svg.call(d3.zoom().on("zoom",() => {
@@ -31,26 +32,52 @@ function print(...data) {
 	console.log(data);
 }
 
-function sta_data_proc(data, nan_value, data_type) {
+function temp_data_proc(data, nan_value) {
 	data_out = [];
 	data = data['cwbopendata']['location'];
 	data.forEach(function(sta){
 		lon = parseFloat(sta['lon']);
 		lat = parseFloat(sta['lat']);
-		cx_cy = projection([lon, lat]);
+		x_y = projection([lon, lat]);
 		weather = sta['weatherElement'];
 		
-		data = (data_type == 'rain') ? weather[6]['elementValue']['value'] : weather[3]['elementValue']['value'];
+		data = weather[3]['elementValue']['value'];
 		if (parseFloat(data) > nan_value) {
 			data_out.push({
-				'cx': cx_cy[0],
-				'cy': cx_cy[1],
+				'x': x_y[0],
+				'y': x_y[1],
 				'lon': sta['lon'],
 				'lat': sta['lat'],
 				'name': sta['locationName'],
 				'code': sta['stationId'],
 				'elev': parseFloat(weather[0]['elementValue']['value']),
 				'data': parseFloat(data),
+			});
+		}
+	});
+	return data_out
+}
+
+function rain_data_proc(data, nan_value) {
+	data_out = [];
+	data = data['cwbopendata']['location'];
+	data.forEach(function(sta){
+		lon = parseFloat(sta['lon']);
+		lat = parseFloat(sta['lat']);
+		x_y = projection([lon, lat]);
+		weather = sta['weatherElement'];
+
+		data = parseFloat(weather[7]['elementValue']['value'].replace(/-998.00/g, '0.00'));
+		if (data > nan_value) {
+			data_out.push({
+				'x': x_y[0],
+				'y': x_y[1],
+				'lon': sta['lon'],
+				'lat': sta['lat'],
+				'name': sta['locationName'],
+				'code': sta['stationId'],
+				'elev': parseFloat(weather[0]['elementValue']['value']),
+				'data': data,
 			});
 		}
 	});
@@ -82,12 +109,12 @@ function data_proc(data, nan_value, fix=0, offset=0) {
 	data_content.forEach(function(value){
 		lon = lon0 + (x * dx) - 0.01; //HACK: TWD64 to TWD97
 		lat = lat0 + (y * dx) + 0.02; //HACK: TWD64 to TWD97
-		cx_cy = projection([lon, lat]);
+		x_y = projection([lon, lat]);
 		
 		if (parseFloat(value) > nan_value) {
 			data_out.push({
-				'cx': cx_cy[0],
-				'cy': cx_cy[1],
+				'x': x_y[0],
+				'y': x_y[1],
 				'lon': lon.toFixed(2),
 				'lat': lat.toFixed(2),
 				'data': parseFloat(value),
@@ -157,12 +184,8 @@ function plot_grid_data(data) {
 		.data(data)
 		.enter()
 		.append("rect")
-		.attr("x", function(d) {
-			return d['cx'];
-		})
-		.attr("y", function(d) {
-			return d['cy'];
-		})
+		.attr("x", function(d) {return d['x']})
+		.attr("y", function(d) {return d['y']})
 		.attr('width', function(d) {return d['size']})
 		.attr('height', function(d) {return d['size']+1})
 		.style('fill', function(d) {return cmap(cb, d['data'])})
@@ -181,18 +204,12 @@ function plot_grid_data(data) {
 
 function plot_sta_data(data) {
 	g.selectAll("text")
-		.data(sta_data)
+		.data(data)
 		.enter()
 		.append("svg:text")
-		.attr("x", function(d) {
-			return d['cx'];
-		})
-		.attr("y", function(d) {
-			return d['cy'];
-		})
-		.text(function(d){
-			return d['data'];
-		})
+		.attr("x", function(d) {return d['x']})
+		.attr("y", function(d) {return d['y']})
+		.text(function(d){return d['data']})
 		.on("mouseover", function(d) {
 			d3.select('#tooltip').style('opacity', 1).html('<div class="custom_tooltip">' + d['lon'] + ', ' + d['lat'] + '<br>' + d['code'] + '_' + d['name'] + '<br>' + d['elev'] + ' m</div>');
 		})
@@ -203,7 +220,7 @@ function plot_sta_data(data) {
 			d3.select('#tooltip').style('opacity', 0);
 		})
 		.attr("text-anchor","middle")
-		.attr('font-size','5px')
+		.attr('font-size','3px')
 		.style('pointer-events', 'none')
 		.attr("class","sta")
 		.raise()
@@ -212,34 +229,33 @@ function plot_sta_data(data) {
 }
 
 async function plot_data() {
-	//d3.select('body').style('cursor', 'wait');
 	d3.selectAll("select").attr('disabled', '1');
 	d3.select('#info').html('<font color="red"><b>資料載入中，請稍後...<b></font>');
 	
 	option = d3.select('#product').property("value");
 	
-	if (option == '雨量GT') {
-		[rawdata, stadata, autostadata] = await Promise.all([d3.json(rain_url), d3.json(sta_data_url), d3.json(auto_sta_data_url)]);
-		data = data_proc(rawdata, -1, -1);
-		sta_data = sta_data_proc(stadata, -99, 'rain');
-		auto_sta_data = sta_data_proc(stadata, -99, 'rain');
-		cb = raincb;
-	} else if (option == '溫度GT') {
+	if (option == '溫度GT') {
 		[rawdata, stadata, autostadata] = await Promise.all([d3.json(temp_url), d3.json(sta_data_url), d3.json(auto_sta_data_url)]);
 		data = data_proc(rawdata, -999, -1);
-		sta_data = sta_data_proc(stadata, -99, 'temp');
-		auto_sta_data = sta_data_proc(stadata, -99, 'temp');
+		sta_data = temp_data_proc(stadata, -99);
+		auto_sta_data = temp_data_proc(autostadata, -99);
 		cb = tempcb;
+	} else if (option == '雨量GT') {
+		[rawdata, stadata, autoraindata] = await Promise.all([d3.json(rain_url), d3.json(sta_data_url), d3.json(auto_rain_data_url)]);
+		data = data_proc(rawdata, -1, -1);
+		sta_data = [];
+		auto_sta_data = rain_data_proc(autoraindata, -99);
+		cb = raincb;
 	} else if (option == 'QPESUMS雨量') {
-		[rawdata] = await Promise.all([d3.json(qpesums_rain_url)]);
+		[rawdata, stadata, autoraindata] = await Promise.all([d3.json(qpesums_rain_url), d3.json(sta_data_url), d3.json(auto_rain_data_url)]);
 		data = data_proc(rawdata, -1);
-		sta_data = null;
-		auto_sta_data = null;
+		sta_data = [];
+		auto_sta_data = rain_data_proc(autoraindata, -99);
 		cb = raincb;
 	} else if (option == '雷達整合回波') {
 		[rawdata] = await Promise.all([d3.json(qpesums_radar_url)]);
 		data = data_proc(rawdata, -99, 0, 1);
-		sta_data = null;
+		sta_data = [];
 		auto_sta_data = null;
 		cb = radarcb;
 	}
@@ -251,23 +267,21 @@ async function plot_data() {
 	plot_grid_data(data);
 		
 	//Station Data
-	if (sta_data && auto_sta_data) {
-		plot_sta_data(sta_data);
-		plot_sta_data(auto_sta_data);
+	if (auto_sta_data) {
+		plot_sta_data(auto_sta_data.concat(sta_data));
 	}
 		
-	//d3.select('body').style('cursor', 'default');
 	d3.selectAll("select").attr('disabled', null);
 }
 
 document.onmousedown = function(e) {
-	if (e.which == 2) {
+	if (e.which == 3) {
 		d3.select('#tooltip').style('opacity', 0);
 		d3.selectAll(".sta").style('pointer-events', 'auto');
 		d3.selectAll(".town").style('pointer-events', 'none');
 		d3.selectAll("rect").style('pointer-events', 'none');
 	}
-	if (e.which == 3) {
+	if (e.which == 2) {
 		d3.select('#tooltip').style('opacity', 0);
 		d3.selectAll(".town").style('pointer-events', 'auto');
 		d3.selectAll(".sta").style('pointer-events', 'none');
@@ -275,13 +289,13 @@ document.onmousedown = function(e) {
 	}
 };
 document.onmouseup = function(e) {
-	if (e.which == 2) {
+	if (e.which == 3) {
 		d3.select('#tooltip').style('opacity', 0);
 		d3.selectAll("rect").style('pointer-events', 'auto');
 		d3.selectAll(".sta").style('pointer-events', 'none');
 		d3.selectAll(".town").style('pointer-events', 'none');
 	}
-	if (e.which == 3) {
+	if (e.which == 2) {
 		d3.select('#tooltip').style('opacity', 0);
 		d3.selectAll("rect").style('pointer-events', 'auto');
 		d3.selectAll(".sta").style('pointer-events', 'none');
