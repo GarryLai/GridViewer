@@ -49,12 +49,12 @@ function temp_data_proc(data, nan_value) {
 		x_y = projection([lon, lat]);
 		weather = element_to_list(sta['weatherElement']);
 
-		font_cmap=x=>x>=39.5?"#8520a0":x>=37.5?"#845194":x>=35.5?"#780101":x>=34.5?"#ad053a":x>=32.5?"#ed5138":x>=19.5?"":x>=13.5?"#96d07c":x>=11.5?"#2fa257":x>=9.5?"#0c924b":x>=7.5?"#a4dfec":x>=5.5?"#87cad8":"#69b4c4";
+		font_cmap = (x) => isNaN(x)?"black":x>=39.5?"#8520a0":x>=37.5?"#845194":x>=35.5?"#780101":x>=34.5?"#ad053a":x>=32.5?"#ed5138":x>=19.5?"":x>=13.5?"#96d07c":x>=11.5?"#2fa257":x>=9.5?"#0c924b":x>=7.5?"#a4dfec":x>=5.5?"#87cad8":"#69b4c4";
 		
-		data = parseFloat(weather['TEMP']);
-		t_high = parseFloat(weather['D_TX']);
-		t_low = parseFloat(weather['D_TN']);
-		rh = parseFloat(weather['HUMD'])*100;
+		data = parseFloat(weather['TEMP'].replace(nan_value, NaN));
+		t_high = parseFloat(weather['D_TX'].replace(nan_value, NaN));
+		t_low = parseFloat(weather['D_TN'].replace(nan_value, NaN));
+		rh = parseFloat(weather['HUMD'].replace(nan_value, NaN))*100;
 		
 		t = '<b><font color="'+font_cmap(data)+'">' + data + '</font></b>';
 		t_high = '<b><font color="'+font_cmap(t_high)+'">' + t_high + '</font></b>';
@@ -84,20 +84,20 @@ function rain_data_proc(data, nan_value, type=0) {
 		x_y = projection([lon, lat]);
 		weather = element_to_list(sta['weatherElement']);
 
-		data_today = parseFloat(weather['NOW'].replace(/-998.00/g, '0.00'));
-		data10 = parseFloat(weather['MIN_10'].replace(/-998.00/g, '0.00'));
-		data1 = parseFloat(weather['RAIN'].replace(/-998.00/g, '0.00'));
-		data3 = parseFloat(weather['HOUR_3'].replace(/-998.00/g, '0.00'));
-		data6 = parseFloat(weather['HOUR_6'].replace(/-998.00/g, '0.00'));
-		data12 = parseFloat(weather['HOUR_12'].replace(/-998.00/g, '0.00'));
-		data24 = parseFloat(weather['HOUR_24'].replace(/-998.00/g, '0.00'));
+		data_today = parseFloat(weather['NOW'].replace(/-998.00/g, '0.00').replace(nan_value, NaN));
+		data10 = parseFloat(weather['MIN_10'].replace(/-998.00/g, '0.00').replace(nan_value, NaN));
+		data1 = parseFloat(weather['RAIN'].replace(/-998.00/g, '0.00').replace(nan_value, NaN));
+		data3 = parseFloat(weather['HOUR_3'].replace(/-998.00/g, '0.00').replace(nan_value, NaN));
+		data6 = parseFloat(weather['HOUR_6'].replace(/-998.00/g, '0.00').replace(nan_value, NaN));
+		data12 = parseFloat(weather['HOUR_12'].replace(/-998.00/g, '0.00').replace(nan_value, NaN));
+		data24 = parseFloat(weather['HOUR_24'].replace(/-998.00/g, '0.00').replace(nan_value, NaN));
 		
 		data = type ? data1 : data_today;
 		
-		font_cmap_10m=x=>x>=100.?"red":x>=80.?"orange":x>=40.?"gold":x>=15.?"aquamarine":x>1.?"dimgray":"";
-		font_cmap_1h=x=>x>=100.?"red":x>=80.?"orange":x>=40.?"gold":x>1.?"dimgray":"";
-		font_cmap_3h=x=>x>=200.?"red":x>=100.?"orange":x>=80.?"gold":x>3.?"dimgray":"";
-		font_cmap_24h=x=>x>=500.?"fuchsia":x>=350.?"red":x>=200.?"orange":x>=80.?"gold":x>5.?"dimgray":"";
+		font_cmap_10m = (x) => isNaN(x)?"black":x>=100.?"red":x>=80.?"orange":x>=40.?"gold":x>=15.?"aquamarine":x>1.?"dimgray":"";
+		font_cmap_1h = (x) => isNaN(x)?"black":x>=100.?"red":x>=80.?"orange":x>=40.?"gold":x>1.?"dimgray":"";
+		font_cmap_3h = (x) => isNaN(x)?"black":x>=200.?"red":x>=100.?"orange":x>=80.?"gold":x>3.?"dimgray":"";
+		font_cmap_24h = (x) => isNaN(x)?"black":x>=500.?"fuchsia":x>=350.?"red":x>=200.?"orange":x>=80.?"gold":x>5.?"dimgray":"";
 		
 		data10 = '<b><font color="' + font_cmap_10m(data10) + '">' + data10 + '</font></b>';
 		data1 = '<b><font color="' + font_cmap_1h(data1) + '">' + data1 + '</font></b>';
