@@ -120,11 +120,12 @@ function data_proc(data, nan_value, fix=0, offset=0) {
 		lat = lat0 + (y * dx) + 0.02; //HACK: TWD64 to TWD97
 		x_y = projection([lon, lat]);
 		
-		if (parseFloat(value) > nan_value) {
+		data = parseFloat(value);
+		if (data > nan_value) {
 			data_out.push({
 				'x': x_y[0],
 				'y': x_y[1],
-				'data': parseFloat(value),
+				'data': data,
 				'size': dx*200,
 				'tooltip': lon.toFixed(2) + ', ' + lat.toFixed(2) + '<br>' + parseFloat(value) + ' ' + unit,
 			});
