@@ -32,6 +32,14 @@ function print(...data) {
 	console.log(data);
 }
 
+function element_to_list(data) {
+	out = {};
+	data.forEach(function(ele){
+		out[ele['elementName']] = ele['elementValue']['value'];
+	});
+	return out
+}
+
 function temp_data_proc(data, nan_value) {
 	data_out = [];
 	data = data['cwbopendata']['location'];
@@ -39,16 +47,26 @@ function temp_data_proc(data, nan_value) {
 		lon = parseFloat(sta['lon']);
 		lat = parseFloat(sta['lat']);
 		x_y = projection([lon, lat]);
-		weather = sta['weatherElement'];
+		weather = element_to_list(sta['weatherElement']);
+
+		font_cmap=x=>x>=39.5?"fuchsia":x>=37.5?"red":x>=35.5?"orange":x>=34.5?"yellow":x>32.5?"aquamarine":x>20.4?"":x>14.4?"#96d07c":x>12.4?"#2fa257":x>10.4?"#0c924b":x>8.4?"#a4dfec":x>6.4?"#87cad8":"#69b4c4";
 		
-		data = parseFloat(weather[3]['elementValue']['value']);
-		rh = parseFloat(weather[4]['elementValue']['value'])*100;
+		data = parseFloat(weather['TEMP']);
+		t_high = parseFloat(weather['D_TX']);
+		t_low = parseFloat(weather['D_TN']);
+		rh = parseFloat(weather['HUMD'])*100;
+		
+		t = '<b><font color="'+font_cmap(data)+'">' + data + '</font></b>';
+		t_high = '<b><font color="'+font_cmap(t_high)+'">' + t_high + '</font></b>';
+		t_low = '<b><font color="'+font_cmap(t_low)+'">' + t_low + '</font></b>';
+		rh = '<b>' + rh + '</b>';
+		
 		if (data > nan_value) {
 			data_out.push({
 				'x': x_y[0],
 				'y': x_y[1],
 				'data': data,
-				'tooltip': sta['lon'] + ', ' + sta['lat'] + '<br>' + sta['stationId'] + '_' + sta['locationName'] + '<br>' + weather[0]['elementValue']['value'] + ' m' + '<hr>溫度: ' + data + ' ℃' + '<br>濕度: ' + rh + ' %',
+				'tooltip': sta['lon'] + ', ' + sta['lat'] + '<br>' + sta['stationId'] + '_' + sta['locationName'] + '<br>' + weather['ELEV'] + ' m' + '<hr>溫度: ' + t + ' ℃' + '<br>高溫：' + t_high + ' ℃ (' + weather['D_TXT'] + ')<br>低溫：' + t_low + ' ℃ (' + weather['D_TNT'] + ')<br>濕度: <b>' + rh + '</b> %',
 			});
 		}
 	});
@@ -62,31 +80,37 @@ function rain_data_proc(data, nan_value, type=0) {
 		lon = parseFloat(sta['lon']);
 		lat = parseFloat(sta['lat']);
 		x_y = projection([lon, lat]);
-		weather = sta['weatherElement'];
+		weather = element_to_list(sta['weatherElement']);
 
-		data_today = parseFloat(weather[7]['elementValue']['value'].replace(/-998.00/g, '0.00'));
-		data10 = parseFloat(weather[2]['elementValue']['value'].replace(/-998.00/g, '0.00'));
-		data1 = parseFloat(weather[1]['elementValue']['value'].replace(/-998.00/g, '0.00'));
-		data3 = parseFloat(weather[3]['elementValue']['value'].replace(/-998.00/g, '0.00'));
-		data6 = parseFloat(weather[4]['elementValue']['value'].replace(/-998.00/g, '0.00'));
-		data12 = parseFloat(weather[5]['elementValue']['value'].replace(/-998.00/g, '0.00'));
-		data24 = parseFloat(weather[6]['elementValue']['value'].replace(/-998.00/g, '0.00'));
-		
-		/*data10 = '<font color="' + cmap(raincb, data10) + '">' + data10 + '</font>';
-		data1 = '<font color="' + cmap(raincb, data1) + '">' + data1 + '</font>';
-		data3 = '<font color="' + cmap(raincb, data3) + '">' + data3 + '</font>';
-		data6 = '<font color="' + cmap(raincb, data6) + '">' + data6 + '</font>';
-		data12 = '<font color="' + cmap(raincb, data12) + '">' + data12 + '</font>';
-		data24 = '<font color="' + cmap(raincb, data24) + '">' + data24 + '</font>';*/
+		data_today = parseFloat(weather['NOW'].replace(/-998.00/g, '0.00'));
+		data10 = parseFloat(weather['MIN_10'].replace(/-998.00/g, '0.00'));
+		data1 = parseFloat(weather['RAIN'].replace(/-998.00/g, '0.00'));
+		data3 = parseFloat(weather['HOUR_3'].replace(/-998.00/g, '0.00'));
+		data6 = parseFloat(weather['HOUR_6'].replace(/-998.00/g, '0.00'));
+		data12 = parseFloat(weather['HOUR_12'].replace(/-998.00/g, '0.00'));
+		data24 = parseFloat(weather['HOUR_24'].replace(/-998.00/g, '0.00'));
 		
 		data = type ? data1 : data_today;
+		
+		font_cmap_10m=x=>x>=100.?"red":x>=80.?"orange":x>=40.?"gold":x>=15.?"aquamarine":x>1.?"dimgray":"";
+		font_cmap_1h=x=>x>=100.?"red":x>=80.?"orange":x>=40.?"gold":x>1.?"dimgray":"";
+		font_cmap_3h=x=>x>=200.?"red":x>=100.?"orange":x>=80.?"gold":x>3.?"dimgray":"";
+		font_cmap_24h=x=>x>=500.?"fuchsia":x>=350.?"red":x>=200.?"orange":x>=80.?"gold":x>5.?"dimgray":"";
+		
+		data10 = '<b><font color="' + font_cmap_10m(data10) + '">' + data10 + '</font></b>';
+		data1 = '<b><font color="' + font_cmap_1h(data1) + '">' + data1 + '</font></b>';
+		data3 = '<b><font color="' + font_cmap_3h(data3) + '">' + data3 + '</font></b>';
+		data6 = '<b><font color="' + font_cmap_24h(data6) + '">' + data6 + '</font></b>';
+		data12 = '<b><font color="' + font_cmap_24h(data12) + '">' + data12 + '</font></b>';
+		data24 = '<b><font color="' + font_cmap_24h(data24) + '">' + data24 + '</font></b>';
+		data_today = '<b><font color="' + font_cmap_24h(data_today) + '">' + data_today + '</font></b>';
 		
 		if (data > nan_value) {
 			data_out.push({
 				'x': x_y[0],
 				'y': x_y[1],
 				'data': data,
-				'tooltip': sta['lon'] + ', ' + sta['lat'] + '<br>' + sta['stationId'] + '_' + sta['locationName'] + '<br>' + weather[0]['elementValue']['value'] + ' m<hr>10m: ' + data10 + ' mm<br>1h: ' + data1 + ' mm<br>3h: ' + data3 + ' mm<br>6h: ' + data6 + ' mm<br>12h: ' + data12 + ' mm<br>24h: ' + data24 + ' mm<br>今日: ' + data_today + ' mm',
+				'tooltip': sta['lon'] + ', ' + sta['lat'] + '<br>' + sta['stationId'] + '_' + sta['locationName'] + '<br>' + weather['ELEV'] + ' m<hr>10m: ' + data10 + ' mm<br>1h: ' + data1 + ' mm<br>3h: ' + data3 + ' mm<br>6h: ' + data6 + ' mm<br>12h: ' + data12 + ' mm<br>24h: ' + data24 + ' mm<br>今日: ' + data_today + ' mm',
 			});
 		}
 	});
@@ -120,11 +144,12 @@ function data_proc(data, nan_value, fix=0, offset=0) {
 		lat = lat0 + (y * dx) + 0.02; //HACK: TWD64 to TWD97
 		x_y = projection([lon, lat]);
 		
-		if (parseFloat(value) > nan_value) {
+		data = parseFloat(value);
+		if (data > nan_value) {
 			data_out.push({
 				'x': x_y[0],
 				'y': x_y[1],
-				'data': parseFloat(value),
+				'data': data,
 				'size': dx*200,
 				'tooltip': lon.toFixed(2) + ', ' + lat.toFixed(2) + '<br>' + parseFloat(value) + ' ' + unit,
 			});
@@ -248,13 +273,13 @@ async function plot_data() {
 		auto_sta_data = temp_data_proc(autostadata, -99);
 		cb = tempcb;
 	} else if (option == '雨量') {
-		[rawdata, stadata, autoraindata] = await Promise.all([d3.json(rain_url), d3.json(sta_data_url), d3.json(auto_rain_data_url)]);
+		[rawdata, autoraindata] = await Promise.all([d3.json(rain_url), d3.json(auto_rain_data_url)]);
 		data = data_proc(rawdata, -1, -1);
 		sta_data = [];
 		auto_sta_data = rain_data_proc(autoraindata, -99);
 		cb = raincb;
 	} else if (option == 'QPESUMS雨量') {
-		[rawdata, stadata, autoraindata] = await Promise.all([d3.json(qpesums_rain_url), d3.json(sta_data_url), d3.json(auto_rain_data_url)]);
+		[rawdata, autoraindata] = await Promise.all([d3.json(qpesums_rain_url), d3.json(auto_rain_data_url)]);
 		data = data_proc(rawdata, -1);
 		sta_data = [];
 		auto_sta_data = rain_data_proc(autoraindata, -99, 1);
