@@ -4,15 +4,15 @@ const g = svg.append("g");
 const county_map_url = './COUNTY_MOI_1090820.json';
 const town_map_url = './TOWN_MOI_1120317.json';
 
-const temp_url = 'https://cwbopendata.s3.ap-northeast-1.amazonaws.com/DIV2/O-A0038-003.json';
-const rain_url = 'https://cwbopendata.s3.ap-northeast-1.amazonaws.com/DIV2/O-A0040-004.json';
+const temp_url = 'https://cwbopendata.s3.ap-northeast-1.amazonaws.com/Observation/O-A0038-003.json';
+const rain_url = 'https://cwbopendata.s3.ap-northeast-1.amazonaws.com/Observation/O-A0040-004.json';
 
-const qpesums_rain_url = 'https://cwbopendata.s3.ap-northeast-1.amazonaws.com/MSC/O-B0045-001.json';
-const qpesums_radar_url = 'https://cwbopendata.s3.ap-northeast-1.amazonaws.com/MSC/O-A0059-001.json';
+const qpesums_rain_url = 'https://cwbopendata.s3.ap-northeast-1.amazonaws.com/Observation/O-B0045-001.json';
+const qpesums_radar_url = 'https://cwbopendata.s3.ap-northeast-1.amazonaws.com/Observation/O-A0059-001.json';
 
-const auto_sta_data_url = 'https://cwbopendata.s3.ap-northeast-1.amazonaws.com/DIV2/O-A0001-001.json';
-const auto_rain_data_url = 'https://cwbopendata.s3.ap-northeast-1.amazonaws.com/DIV2/O-A0002-001.json';
-const sta_data_url = 'https://cwbopendata.s3.ap-northeast-1.amazonaws.com/DIV2/O-A0003-001.json';
+const auto_sta_data_url = 'https://cwbopendata.s3.ap-northeast-1.amazonaws.com/Observation/O-A0001-001.json';
+const auto_rain_data_url = 'https://cwbopendata.s3.ap-northeast-1.amazonaws.com/Observation/O-A0002-001.json';
+const sta_data_url = 'https://cwbopendata.s3.ap-northeast-1.amazonaws.com/Observation/O-A0003-001.json';
 
 svg.call(d3.zoom().on("zoom",() => {
 	g.attr("transform", d3.event.transform);
