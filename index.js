@@ -49,7 +49,7 @@ function temp_data_proc(data, nan_value) {
 		x_y = projection([lon, lat]);
 		weather = element_to_list(sta['weatherElement']);
 
-		font_cmap=x=>x>=39.5?"fuchsia":x>=37.5?"red":x>=35.5?"orange":x>=34.5?"yellow":x>32.5?"aquamarine":x>20.4?"":x>14.4?"#96d07c":x>12.4?"#2fa257":x>10.4?"#0c924b":x>8.4?"#a4dfec":x>6.4?"#87cad8":"#69b4c4";
+		font_cmap=x=>x>=39.5?"#8520a0":x>=37.5?"#845194":x>=35.5?"#780101":x>=34.5?"#ad053a":x>=32.5?"#ed5138":x>=19.5?"":x>=13.5?"#96d07c":x>=11.5?"#2fa257":x>=9.5?"#0c924b":x>=7.5?"#a4dfec":x>=5.5?"#87cad8":"#69b4c4";
 		
 		data = parseFloat(weather['TEMP']);
 		t_high = parseFloat(weather['D_TX']);
@@ -60,13 +60,15 @@ function temp_data_proc(data, nan_value) {
 		t_high = '<b><font color="'+font_cmap(t_high)+'">' + t_high + '</font></b>';
 		t_low = '<b><font color="'+font_cmap(t_low)+'">' + t_low + '</font></b>';
 		rh = '<b>' + rh + '</b>';
+		t_high_t = (weather['D_TXT'].indexOf('T') == -1) ? weather['D_TXT'] : weather['D_TXT'].substr(11, 2) + weather['D_TXT'].substr(14, 2)
+		t_low_t = (weather['D_TNT'].indexOf('T') == -1) ? weather['D_TNT'] : weather['D_TNT'].substr(11, 2) + weather['D_TNT'].substr(14, 2)
 		
 		if (data > nan_value) {
 			data_out.push({
 				'x': x_y[0],
 				'y': x_y[1],
 				'data': data,
-				'tooltip': sta['lon'] + ', ' + sta['lat'] + '<br>' + sta['stationId'] + '_' + sta['locationName'] + '<br>' + weather['ELEV'] + ' m' + '<hr>溫度: ' + t + ' ℃' + '<br>高溫：' + t_high + ' ℃ (' + weather['D_TXT'] + ')<br>低溫：' + t_low + ' ℃ (' + weather['D_TNT'] + ')<br>濕度: <b>' + rh + '</b> %',
+				'tooltip': sta['lon'] + ', ' + sta['lat'] + '<br>' + sta['stationId'] + '_' + sta['locationName'] + '<br>' + weather['ELEV'] + ' m' + '<hr>溫度: ' + t + ' ℃' + '<br>高溫：' + t_high + ' ℃ (' + t_high_t + ')<br>低溫：' + t_low + ' ℃ (' + t_low_t + ')<br>濕度: <b>' + rh + '</b> %',
 			});
 		}
 	});
@@ -127,8 +129,9 @@ function data_proc(data, nan_value, fix=0, offset=0) {
 	lat0 = parseFloat(lon0_lat0[1]);
 	
 	dx = parseFloat(parameter[1+offset]['parameterValue']);
+	size = dx*200
 	
-	valid_time = parameter[2+offset]['parameterValue'];
+	valid_time = new Date(parameter[2+offset]['parameterValue']);
 	
 	nx_ny = parameter[3+offset]['parameterValue'].split('*');
 	nx = parseInt(nx_ny[0], 10)+fix;
@@ -150,8 +153,8 @@ function data_proc(data, nan_value, fix=0, offset=0) {
 				'x': x_y[0],
 				'y': x_y[1],
 				'data': data,
-				'size': dx*200,
-				'tooltip': lon.toFixed(2) + ', ' + lat.toFixed(2) + '<br>' + parseFloat(value) + ' ' + unit,
+				'size': size,
+				'tooltip': lon.toFixed(2) + ', ' + lat.toFixed(2) + '<br>' + data + ' ' + unit,
 			});
 		}
 		
@@ -162,7 +165,7 @@ function data_proc(data, nan_value, fix=0, offset=0) {
 		}
 	});
 	
-	d3.select('#info').html('<b>' + valid_time + '</b>');
+	d3.select('#info').html('<b>' + valid_time.toLocaleString() + '</b>');
 	return data_out;
 }
 
