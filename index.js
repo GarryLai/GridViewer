@@ -41,6 +41,7 @@ function element_to_list(data) {
 }
 
 function temp_data_proc(data, nan_value) {
+	console.log(new Date().toLocaleString(), 'temp_data_proc start');
 	data_out = [];
 	data = data['cwbopendata']['location'];
 	data.forEach(function(sta){
@@ -72,10 +73,12 @@ function temp_data_proc(data, nan_value) {
 			});
 		}
 	});
+	console.log(new Date().toLocaleString(), 'temp_data_proc end');
 	return data_out
 }
 
 function rain_data_proc(data, nan_value, type=0) {
+	console.log(new Date().toLocaleString(), 'rain_data_proc start');
 	data_out = [];
 	data = data['cwbopendata']['location'];
 	data.forEach(function(sta){
@@ -116,10 +119,12 @@ function rain_data_proc(data, nan_value, type=0) {
 			});
 		}
 	});
+	console.log(new Date().toLocaleString(), 'rain_data_proc end');
 	return data_out
 }
 
 function data_proc(data, nan_value, fix=0, offset=0) {
+	console.log(new Date().toLocaleString(), 'data_proc start');
 	data_out = [];
 	
 	parameter = data['cwbopendata']['dataset']['datasetInfo']['parameterSet']['parameter'];
@@ -166,6 +171,7 @@ function data_proc(data, nan_value, fix=0, offset=0) {
 		}
 	});
 	
+	console.log(new Date().toLocaleString(), 'data_proc end');
 	return data_out;
 }
 
@@ -178,6 +184,7 @@ function cmap(cmap, value) {
 }
 
 async function draw_map() {
+	console.log(new Date().toLocaleString(), 'draw_map start');
 	[county_map_data, town_map_data] = await Promise.all([
 		d3.json(county_map_url),
 		d3.json(town_map_url),
@@ -212,9 +219,11 @@ async function draw_map() {
 		.attr("d", pathGenerator)
 		.attr("class","county")
 		.style('pointer-events', 'none')
+	console.log(new Date().toLocaleString(), 'draw_map end');
 }
 
 function plot_grid_data(data) {
+	console.log(new Date().toLocaleString(), 'plot_grid_data start');
 	g.selectAll("circle")
 		.data(data)
 		.enter()
@@ -235,9 +244,11 @@ function plot_grid_data(data) {
 		})
 		.lower()
 		.lower(); 
+	console.log(new Date().toLocaleString(), 'plot_grid_data end');
 }
 
 function plot_sta_data(data) {
+	console.log(new Date().toLocaleString(), 'plot_sta_data start');
 	g.selectAll("text")
 		.data(data)
 		.enter()
@@ -261,6 +272,7 @@ function plot_sta_data(data) {
 		.raise()
 		.raise()
 		.raise();
+	console.log(new Date().toLocaleString(), 'plot_sta_data end');
 }
 
 async function plot_data() {
