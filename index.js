@@ -54,7 +54,7 @@ function temp_data_proc(data, nan_value) {
 		data = parseFloat(weather['TEMP'].replace(nan_value, NaN));
 		t_high = parseFloat(weather['D_TX'].replace(nan_value, NaN));
 		t_low = parseFloat(weather['D_TN'].replace(nan_value, NaN));
-		rh = parseFloat(weather['HUMD'].replace(nan_value, NaN))*100;
+		rh = parseFloat(weather['HUMD'].replace(nan_value, NaN)).toFixed(0)*100;
 		
 		t = '<b><font color="'+font_cmap(data)+'">' + data + '</font></b>';
 		t_high = '<b><font color="'+font_cmap(t_high)+'">' + t_high + '</font></b>';
@@ -132,6 +132,7 @@ function data_proc(data, nan_value, fix=0, offset=0) {
 	size = dx*200
 	
 	valid_time = new Date(parameter[2+offset]['parameterValue']);
+	d3.select('#info').html('<b>' + valid_time.toLocaleString() + '</b>');
 	
 	nx_ny = parameter[3+offset]['parameterValue'].split('*');
 	nx = parseInt(nx_ny[0], 10)+fix;
@@ -165,7 +166,6 @@ function data_proc(data, nan_value, fix=0, offset=0) {
 		}
 	});
 	
-	d3.select('#info').html('<b>' + valid_time.toLocaleString() + '</b>');
 	return data_out;
 }
 
