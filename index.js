@@ -224,7 +224,7 @@ async function draw_map() {
 
 function plot_grid_data(data) {
 	console.log(new Date().toLocaleString(), 'plot_grid_data start');
-	g.selectAll("circle")
+	g.selectAll("svg")
 		.data(data)
 		.enter()
 		.append("rect")
