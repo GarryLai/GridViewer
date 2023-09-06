@@ -23,6 +23,9 @@ var pathGenerator = d3.geoPath().projection(projection);
 
 var svg = d3.select("#rect").append("svg");
 
+var is_shift = false;
+var is_ctrl = false;
+
 d3.select('body')
 	.append('div')
 	.attr('id', 'tooltip')
@@ -68,8 +71,9 @@ function temp_data_proc(data, nan_value) {
 			data_out.push({
 				'x': x_y[0],
 				'y': x_y[1],
+				'sta': sta['stationId'],
 				'data': data,
-				'tooltip': sta['lon'] + ', ' + sta['lat'] + '<br>' + sta['stationId'] + '_' + sta['locationName'] + '<br>' + weather['ELEV'] + ' m' + '<hr>溫度: ' + t + ' ℃' + '<br>高溫：' + t_high + ' ℃ (' + t_high_t + ')<br>低溫：' + t_low + ' ℃ (' + t_low_t + ')<br>濕度: <b>' + rh + '</b> %',
+				'tooltip': sta['lon'] + ', ' + sta['lat'] + '<br>' + sta['stationId'] + '_' + sta['locationName'] + '<br>' + weather['ELEV'] + ' m' + '<hr>' + new Date(sta['time']['obsTime']).toLocaleString() + '<br>溫度: ' + t + ' ℃' + '<br>高溫：' + t_high + ' ℃ (' + t_high_t + ')<br>低溫：' + t_low + ' ℃ (' + t_low_t + ')<br>濕度: <b>' + rh + '</b> %',
 			});
 		}
 	});
@@ -114,8 +118,9 @@ function rain_data_proc(data, nan_value, type=0) {
 			data_out.push({
 				'x': x_y[0],
 				'y': x_y[1],
+				'sta': sta['stationId'],
 				'data': data,
-				'tooltip': sta['lon'] + ', ' + sta['lat'] + '<br>' + sta['stationId'] + '_' + sta['locationName'] + '<br>' + weather['ELEV'] + ' m<hr>10m: ' + data10 + ' mm<br>1h: ' + data1 + ' mm<br>3h: ' + data3 + ' mm<br>6h: ' + data6 + ' mm<br>12h: ' + data12 + ' mm<br>24h: ' + data24 + ' mm<br>今日: ' + data_today + ' mm',
+				'tooltip': sta['lon'] + ', ' + sta['lat'] + '<br>' + sta['stationId'] + '_' + sta['locationName'] + '<br>' + weather['ELEV'] + ' m<hr>' + new Date(sta['time']['obsTime']).toLocaleString() + '<br>10m: ' + data10 + ' mm<br>1h: ' + data1 + ' mm<br>3h: ' + data3 + ' mm<br>6h: ' + data6 + ' mm<br>12h: ' + data12 + ' mm<br>24h: ' + data24 + ' mm<br>今日: ' + data_today + ' mm',
 			});
 		}
 	});
@@ -257,7 +262,13 @@ function plot_sta_data(data) {
 		.attr("y", function(d) {return d['y']})
 		.text(function(d){return d['data']})
 		.on("mouseover", function(d) {
-			d3.select('#tooltip').style('opacity', 1).html('<div class="custom_tooltip">' + d['tooltip'] + '</div>');
+			if (is_shift) {
+				window.open('https://246.swcb.gov.tw/Info/RainGraph?stid=' + d['sta'],'win1','width=1000,height=600');
+			} else if (is_ctrl) {
+				window.open('https://www.cwb.gov.tw/V8/C/W/OBS_Station.html?ID=' + d['sta'].substr(0, 5),'win2','width=1000,height=800');
+			} else {
+				d3.select('#tooltip').style('opacity', 1).html('<div class="custom_tooltip">' + d['tooltip'] + '</div>');
+			}
 		})
 		.on("mousemove", function(d) {
 			d3.select('#tooltip').style('left', (d3.event.pageX+10) + 'px').style('top', (d3.event.pageY+10) + 'px');
@@ -322,6 +333,8 @@ async function plot_data() {
 }
 
 document.onmousedown = function(e) {
+	is_shift = e.shiftKey;
+	is_ctrl = e.ctrlKey;
 	if (e.which == 3) {
 		d3.select('#tooltip').style('opacity', 0);
 		d3.selectAll(".sta").style('pointer-events', 'auto');
