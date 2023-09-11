@@ -4,15 +4,15 @@ const g = svg.append("g");
 const county_map_url = './COUNTY_MOI_1090820.json';
 const town_map_url = './TOWN_MOI_1120317.json';
 
-const temp_url = 'https://cwaopendata.s3.ap-northeast-1.amazonaws.com/Observation/O-A0038-003.json';
-const rain_url = 'https://cwaopendata.s3.ap-northeast-1.amazonaws.com/Observation/O-A0040-004.json';
+const temp_url = 'https://cwbopendata.s3.ap-northeast-1.amazonaws.com/Observation/O-A0038-003.json';
+const rain_url = 'https://cwbopendata.s3.ap-northeast-1.amazonaws.com/Observation/O-A0040-004.json';
 
-const qpesums_rain_url = 'https://cwaopendata.s3.ap-northeast-1.amazonaws.com/Observation/O-B0045-001.json';
-const qpesums_radar_url = 'https://cwaopendata.s3.ap-northeast-1.amazonaws.com/Observation/O-A0059-001.json';
+const qpesums_rain_url = 'https://cwbopendata.s3.ap-northeast-1.amazonaws.com/Observation/O-B0045-001.json';
+const qpesums_radar_url = 'https://cwbopendata.s3.ap-northeast-1.amazonaws.com/Observation/O-A0059-001.json';
 
-const auto_sta_data_url = 'https://cwaopendata.s3.ap-northeast-1.amazonaws.com/Observation/O-A0001-001.json';
-const auto_rain_data_url = 'https://cwaopendata.s3.ap-northeast-1.amazonaws.com/Observation/O-A0002-001.json';
-const sta_data_url = 'https://cwaopendata.s3.ap-northeast-1.amazonaws.com/Observation/O-A0003-001.json';
+const auto_sta_data_url = 'https://cwbopendata.s3.ap-northeast-1.amazonaws.com/Observation/O-A0001-001.json';
+const auto_rain_data_url = 'https://cwbopendata.s3.ap-northeast-1.amazonaws.com/Observation/O-A0002-001.json';
+const sta_data_url = 'https://cwbopendata.s3.ap-northeast-1.amazonaws.com/Observation/O-A0003-001.json';
 
 svg.call(d3.zoom().on("zoom",() => {
 	g.attr("transform", d3.event.transform);
@@ -46,7 +46,7 @@ function element_to_list(data) {
 function temp_data_proc(data, nan_value) {
 	console.log(new Date().toLocaleString(), 'temp_data_proc start');
 	data_out = [];
-	data = data['cwaopendata']['location'];
+	data = data['cwbopendata']['location'];
 	data.forEach(function(sta){
 		lon = parseFloat(sta['lon']);
 		lat = parseFloat(sta['lat']);
@@ -84,7 +84,7 @@ function temp_data_proc(data, nan_value) {
 function rain_data_proc(data, nan_value, type=0) {
 	console.log(new Date().toLocaleString(), 'rain_data_proc start');
 	data_out = [];
-	data = data['cwaopendata']['location'];
+	data = data['cwbopendata']['location'];
 	data.forEach(function(sta){
 		lon = parseFloat(sta['lon']);
 		lat = parseFloat(sta['lat']);
@@ -132,7 +132,7 @@ function data_proc(data, nan_value, fix=0, offset=0) {
 	console.log(new Date().toLocaleString(), 'data_proc start');
 	data_out = [];
 	
-	parameter = data['cwaopendata']['dataset']['datasetInfo']['parameterSet']['parameter'];
+	parameter = data['cwbopendata']['dataset']['datasetInfo']['parameterSet']['parameter'];
 	
 	lon0_lat0 = parameter[0+offset]['parameterValue'].split(',');
 	lon0 = parseFloat(lon0_lat0[0]);
@@ -150,7 +150,7 @@ function data_proc(data, nan_value, fix=0, offset=0) {
 	
 	unit = parameter[4+offset]['parameterValue'].replace('攝氏', '℃');
 	
-	data_content = data['cwaopendata']['dataset']['contents']['content'].split(',');
+	data_content = data['cwbopendata']['dataset']['contents']['content'].split(',');
 	x = 0;
 	y = 0;
 	data_content.forEach(function(value){
