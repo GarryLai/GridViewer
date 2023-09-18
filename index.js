@@ -58,7 +58,7 @@ function temp_data_proc(data, nan_value) {
 		data = parseFloat(weather['TEMP'].replace(nan_value, NaN));
 		t_high = parseFloat(weather['D_TX'].replace(nan_value, NaN));
 		t_low = parseFloat(weather['D_TN'].replace(nan_value, NaN));
-		rh = parseFloat(weather['HUMD'].replace(nan_value, NaN)).toFixed(2)*100;
+		rh = parseFloat(parseFloat(weather['HUMD'].replace(nan_value, NaN)).toFixed(2)*100).toFixed(0);
 		
 		t = '<b><font color="'+font_cmap(data)+'">' + data + '</font></b>';
 		t_high = '<b><font color="'+font_cmap(t_high)+'">' + t_high + '</font></b>';
