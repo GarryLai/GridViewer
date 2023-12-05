@@ -7,6 +7,7 @@
 		
 		<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/5.16.0/d3.min.js"></script>
 		<script src="https://cdnjs.cloudflare.com/ajax/libs/topojson/3.0.2/topojson.min.js"></script>
+		<script src="d3.windArrow.js"></script>
 		<script src="cmap.js" defer></script>
 		<script src="index.js" defer></script>
 	</head>
@@ -77,14 +78,15 @@
 		<select id="product" onchange="plot_data()">
 			<option>溫度</option>
 			<option>雨量</option>
+			<!-- <option>風</option> -->
 			<option>QPESUMS雨量</option>
-			<!-- <option>雷達整合回波</option> -->
+			<option>雷達整合回波</option>
 		</select>
 		<div id="info" class="info"></div>
 		<svg width="100vw" height="100vh"></svg>
-		<div class="footer">
-		<!-- 資料來源：<a target="_href" href="https://opendata.cwb.gov.tw">氣象資料開放平臺</a><br> -->
-		Copyright © 2023 <a target="_href" href="https://github.com/GarryLai">Garry Lai</a> V1.2.4(20230918)
+		<div class="footer" style="pointer-events: auto;">
+		資料來源：<a target="_href" href="https://opendata.cwb.gov.tw">氣象資料開放平臺</a><br>
+		Copyright © 2023 <a target="_href" href="https://github.com/GarryLai">Garry Lai</a> V1.3.0(20231205)
 		</div>
 	</body>
 </html>
