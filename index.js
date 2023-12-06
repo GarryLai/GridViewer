@@ -338,8 +338,8 @@ function plot_wind_data(data) {
 		.on("mouseout", function(d) {
 			d3.select('#tooltip').style('opacity', 0);
 		})
-		.attr("text-anchor","middle")
-		.attr('font-size','3px')
+		.attr("text-anchor", "middle")
+		.attr('font-size', '3px')
 		.style('pointer-events', 'none')
 		.attr("class","sta")
 		.raise()
@@ -372,14 +372,31 @@ function plot_sta_data(data) {
 		.on("mouseout", function(d) {
 			d3.select('#tooltip').style('opacity', 0);
 		})
-		.attr("text-anchor","middle")
-		.attr('font-size','3px')
+		.attr("text-anchor", "middle")
+		.attr('font-size', '3px')
 		.style('pointer-events', 'none')
 		.attr("class","sta")
 		.raise()
 		.raise()
 		.raise();
 	console.log(new Date().toLocaleString(), 'plot_sta_data end');
+}
+
+function plot_current_loc() {
+	navigator.geolocation.getCurrentPosition(function(d) {
+		g.append("circle")
+			.attr("cx", function(a) {
+					return projection([d.coords.longitude, d.coords.latitude])[0];
+			})
+			.attr("cy", function(a) {
+					return projection([d.coords.longitude, d.coords.latitude])[1];
+			})
+			.attr("r", 2)
+			.style("fill", "red")
+			.style('pointer-events', 'none')
+			.raise()
+			.raise();
+	})
 }
 
 function clear() {
@@ -483,5 +500,6 @@ document.addEventListener('contextmenu', function(e) {
 
 draw_map();
 plot_data();
+plot_current_loc()
 
-window.setInterval(plot_data, 180*1000);
+window.setInterval(plot_data, 300*1000);
