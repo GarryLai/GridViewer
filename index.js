@@ -409,7 +409,7 @@ async function plot_data() {
 		plot_sta_data(sta_data.concat(auto_sta_data));
 	} else if (option == '雨量') {
 		[rawdata, autoraindata] = await Promise.all([d3.json(rain_url), d3.json(auto_rain_data_url)]);
-		data = data_proc(rawdata, -1, 1, -1);
+		data = data_proc(rawdata, 0, 1, -1);
 		sta_data = null;
 		auto_sta_data = rain_data_proc(autoraindata, -99);
 		cb = raincb;
@@ -426,7 +426,7 @@ async function plot_data() {
 		plot_wind_data(sta_data.concat(auto_sta_data));
 	} else if (option == 'QPESUMS雨量') {
 		[rawdata, autoraindata] = await Promise.all([d3.json(qpesums_rain_url), d3.json(auto_rain_data_url)]);
-		data = data_proc(rawdata, -1, 0);
+		data = data_proc(rawdata, 0, 0);
 		sta_data = null;
 		auto_sta_data = rain_data_proc(autoraindata, -99, 1);
 		cb = raincb;
