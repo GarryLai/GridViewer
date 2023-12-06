@@ -383,8 +383,13 @@ function plot_sta_data(data) {
 }
 
 function clear() {
-	d3.selectAll("rect").remove();
-	d3.selectAll(".sta").remove();
+	document.querySelectorAll('rect').forEach(ele => {
+		ele.remove();
+	});
+	
+	document.querySelectorAll('.sta').forEach(ele => {
+		ele.remove();
+	});
 }
 
 async function plot_data() {
@@ -405,6 +410,7 @@ async function plot_data() {
 	} else if (option == '雨量') {
 		[rawdata, autoraindata] = await Promise.all([d3.json(rain_url), d3.json(auto_rain_data_url)]);
 		data = data_proc(rawdata, -1, 1, -1);
+		sta_data = null;
 		auto_sta_data = rain_data_proc(autoraindata, -99);
 		cb = raincb;
 		clear();
@@ -412,6 +418,7 @@ async function plot_data() {
 		plot_sta_data(auto_sta_data);
 	} else if (option == '風') {
 		[stadata, autostadata] = await Promise.all([d3.json(sta_data_url), d3.json(auto_sta_data_url)]);
+		data = null;
 		sta_data = wind_data_proc(stadata, -99);
 		auto_sta_data = wind_data_proc(autostadata, -99);
 		d3.select('#info').html('');
@@ -420,6 +427,7 @@ async function plot_data() {
 	} else if (option == 'QPESUMS雨量') {
 		[rawdata, autoraindata] = await Promise.all([d3.json(qpesums_rain_url), d3.json(auto_rain_data_url)]);
 		data = data_proc(rawdata, -1, 0);
+		sta_data = null;
 		auto_sta_data = rain_data_proc(autoraindata, -99, 1);
 		cb = raincb;
 		clear();
@@ -428,6 +436,8 @@ async function plot_data() {
 	} else if (option == '雷達整合回波') {
 		[rawdata] = await Promise.all([d3.json(qpesums_radar_url)]);
 		data = data_proc(rawdata, -99, 0, 0);
+		sta_data = null;
+		auto_sta_data = null;
 		cb = radarcb;
 		clear();
 		plot_grid_data(data);
