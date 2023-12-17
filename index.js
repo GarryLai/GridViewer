@@ -65,8 +65,9 @@ function wind_data_proc(data, nan_value) {
 			data_out.push({
 				'x': x_y[0],
 				'y': x_y[1],
-				'sta': sta['stationId'],
+				'sta': sta['StationId'],
 				'data': data,
+				'type': Number.isInteger(sta['StationId']-1) ? 'cwa_sta' : 'auto_sta',
 				'tooltip': coodr['StationLongitude'] + ', ' + coodr['StationLatitude'] + '<br>' + sta['StationId'] + '_' + sta['StationName'] + '<br>' + geo['StationAltitude'] + ' m' + '<hr>' + new Date(sta['ObsTime']['DateTime']).toLocaleString() + '<br>溫度: ' + t + ' ℃' + '<br>高溫：' + t_high + ' ℃ (' + t_high_t + ')<br>低溫：' + t_low + ' ℃ (' + t_low_t + ')<br>濕度: <b>' + rh + '</b> %',
 			});
 		}
@@ -106,8 +107,9 @@ function temp_data_proc(data, nan_value) {
 			data_out.push({
 				'x': x_y[0],
 				'y': x_y[1],
-				'sta': sta['stationId'],
+				'sta': sta['StationId'],
 				'data': data,
+				'type': Number.isInteger(sta['StationId']-1) ? 'cwa_sta' : 'auto_sta',
 				'tooltip': coodr['StationLongitude'] + ', ' + coodr['StationLatitude'] + '<br>' + sta['StationId'] + '_' + sta['StationName'] + '<br>' + geo['StationAltitude'] + ' m' + '<hr>' + new Date(sta['ObsTime']['DateTime']).toLocaleString() + '<br>溫度: ' + t + ' ℃' + '<br>高溫：' + t_high + ' ℃ (' + t_high_t + ')<br>低溫：' + t_low + ' ℃ (' + t_low_t + ')<br>濕度: <b>' + rh + '</b> %',
 			});
 		}
@@ -159,8 +161,9 @@ function rain_data_proc(data, nan_value, type=0) {
 			data_out.push({
 				'x': x_y[0],
 				'y': x_y[1],
-				'sta': sta['stationId'],
+				'sta': sta['StationId'],
 				'data': data,
+				'type': Number.isInteger(sta['StationId']-1) ? 'cwa_sta' : 'auto_sta',
 				'tooltip': coodr['StationLongitude'] + ', ' + coodr['StationLatitude'] + '<br>' + sta['StationId'] + '_' + sta['StationName'] + '<br>' + geo['StationAltitude'] + ' m' + '<hr>' + new Date(sta['ObsTime']['DateTime']).toLocaleString() + '<br>10m: ' + data10 + ' mm<br>1h: ' + data1 + ' mm<br>3h: ' + data3 + ' mm<br>6h: ' + data6 + ' mm<br>12h: ' + data12 + ' mm<br>24h: ' + data24 + ' mm<br>今日: ' + data_today + ' mm<br>兩日: ' + data2d + ' mm<br>三日: ' + data3d + ' mm',
 			});
 		}
@@ -224,6 +227,9 @@ function data_proc(data, nan_value, type, fix=0) {
 			data_out.push({
 				'x': x_y[0],
 				'y': x_y[1],
+				'lat': lat,
+				'lon': lon,
+				'unit': unit,
 				'data': data,
 				'size': size,
 				'tooltip': lon.toFixed(2) + ', ' + lat.toFixed(2) + '<br>' + data + ' ' + unit,
@@ -374,28 +380,56 @@ function plot_sta_data(data) {
 		})
 		.attr("text-anchor", "middle")
 		.attr('font-size', '3px')
+		.attr("font-weight", 700)
 		.style('pointer-events', 'none')
-		.attr("class","sta")
+		.attr("type", function(d){return d['type']})
+		.attr("class", "sta")
 		.raise()
 		.raise()
 		.raise();
 	console.log(new Date().toLocaleString(), 'plot_sta_data end');
 }
 
-function plot_current_loc() {
+function plot_current_loc(data=null, min_dst=0.02) {
+	min_dst = min_dst**2
+	
 	navigator.geolocation.getCurrentPosition(function(d) {
+		coodr = projection([d.coords.longitude, d.coords.latitude]);
+		//w = g.node().getBoundingClientRect().width;
+		//h = g.node().getBoundingClientRect().height;
+		
+		//g.attr("transform", "translate(" + (coodr[0] - w/2) + ", " + (coodr[1] - h/2) + ")" + " scale(1)");
+		
 		g.append("circle")
 			.attr("cx", function(a) {
-					return projection([d.coords.longitude, d.coords.latitude])[0];
+				return coodr[0];
 			})
 			.attr("cy", function(a) {
-					return projection([d.coords.longitude, d.coords.latitude])[1];
+				return coodr[1];
 			})
 			.attr("r", 2)
 			.style("fill", "red")
 			.style('pointer-events', 'none')
 			.raise()
 			.raise();
+			
+		data_now = null;
+		dst_now = 1E10;
+		if (data) {
+			data.forEach(ele => {
+				dst = (ele['lon'] - d.coords.longitude)**2 + (ele['lat'] - d.coords.latitude)**2
+				if (dst < dst_now && dst <= min_dst) {
+					data_now = ele;
+					dst_now = dst;
+				} 
+			});
+			
+			if (data_now) {
+				d3.select('#now').html('所在地：<b>' + data_now['data'] + ' ' + data_now['unit'] + '</b>');	
+			} else {
+				d3.select('#now').html('所在地：<b>0 ' + data[0]['unit'] + '</b>');	
+			}
+		}
 	})
 }
 
@@ -407,6 +441,14 @@ function clear() {
 	document.querySelectorAll('.sta').forEach(ele => {
 		ele.remove();
 	});
+}
+
+function sta_click(ele) {
+	if (ele.checked) {
+		g.selectAll(".sta[type='" + ele.name + "']").style('display', 'block')
+	} else {
+		g.selectAll(".sta[type='" + ele.name + "']").style('display', 'none')
+	}
 }
 
 async function plot_data() {
@@ -424,6 +466,7 @@ async function plot_data() {
 		clear();
 		plot_grid_data(data);
 		plot_sta_data(sta_data.concat(auto_sta_data));
+		plot_current_loc(data);
 	} else if (option == '雨量') {
 		[rawdata, autoraindata] = await Promise.all([d3.json(rain_url), d3.json(auto_rain_data_url)]);
 		data = data_proc(rawdata, 0, 1, -1);
@@ -433,6 +476,7 @@ async function plot_data() {
 		clear();
 		plot_grid_data(data);
 		plot_sta_data(auto_sta_data);
+		plot_current_loc(data);
 	} else if (option == '風') {
 		[stadata, autostadata] = await Promise.all([d3.json(sta_data_url), d3.json(auto_sta_data_url)]);
 		data = null;
@@ -441,6 +485,7 @@ async function plot_data() {
 		d3.select('#info').html('');
 		clear();
 		plot_wind_data(sta_data.concat(auto_sta_data));
+		plot_current_loc(data);
 	} else if (option == 'QPESUMS雨量') {
 		[rawdata, autoraindata] = await Promise.all([d3.json(qpesums_rain_url), d3.json(auto_rain_data_url)]);
 		data = data_proc(rawdata, 0, 0);
@@ -450,6 +495,7 @@ async function plot_data() {
 		clear();
 		plot_grid_data(data);
 		plot_sta_data(auto_sta_data);
+		plot_current_loc(data);
 	} else if (option == '雷達整合回波') {
 		[rawdata] = await Promise.all([d3.json(qpesums_radar_url)]);
 		data = data_proc(rawdata, -99, 0, 0);
@@ -458,6 +504,7 @@ async function plot_data() {
 		cb = radarcb;
 		clear();
 		plot_grid_data(data);
+		plot_current_loc(data);
 	}
 		
 	d3.selectAll("select").attr('disabled', null);
@@ -500,6 +547,5 @@ document.addEventListener('contextmenu', function(e) {
 
 draw_map();
 plot_data();
-plot_current_loc()
 
 window.setInterval(plot_data, 300*1000);
