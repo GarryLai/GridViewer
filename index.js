@@ -386,6 +386,7 @@ function plot_sta_data(data) {
 		.attr("class", "sta")
 		.raise()
 		.raise()
+		.raise()
 		.raise();
 	console.log(new Date().toLocaleString(), 'plot_sta_data end');
 }
