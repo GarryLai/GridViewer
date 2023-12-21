@@ -401,6 +401,7 @@ function plot_current_loc(data=null, min_dst=0.02) {
 		
 		//g.attr("transform", "translate(" + (coodr[0] - w/2) + ", " + (coodr[1] - h/2) + ")" + " scale(1)");
 		
+		d3.select('circle').remove();
 		g.append("circle")
 			.attr("cx", function(a) {
 				return coodr[0];
