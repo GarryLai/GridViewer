@@ -124,7 +124,7 @@ function rain_data_proc(data, nan_value, type=0) {
 	data = data['cwaopendata']['dataset']['Station'];
 	data.forEach(function(sta){
 		geo = sta['GeoInfo']
-		coodr = geo['Coordinates']; //TWD67
+		coodr = geo['Coordinates'][0]; //TWD67
 		lon = parseFloat(coodr['StationLongitude']);
 		lat = parseFloat(coodr['StationLatitude']);
 		x_y = projection([lon, lat]);
@@ -176,28 +176,41 @@ function data_proc(data, nan_value, type, fix=0) {
 	console.log(new Date().toLocaleString(), 'data_proc start');
 	data_out = [];
 	
+	let dataset = data['cwaopendata']['dataset'];
+	let lon0, lat0, dx, size, valid_time, nx, ny, unit, data_content;
+
 	if (type == 1) {
 		//舊版格式 For二組
-		parameter = data['cwaopendata']['dataset']['datasetInfo']['parameterSet']['parameter'];
+		let geo = dataset['GeoInfo'];
+		let resource = dataset['Resource'];
+		let description = resource['Description'];
 		
-		lon0_lat0 = parameter[0]['parameterValue'].split(',');
-		lon0 = parseFloat(lon0_lat0[0]);
-		lat0 = parseFloat(lon0_lat0[1]);
+		lon0 = parseFloat(geo['BottomLeftLongitude']);
+		lat0 = parseFloat(geo['BottomLeftLatitude']);
 		
-		dx = parseFloat(parameter[1]['parameterValue']);
-		size = dx*200
+		// Parse resolution and dimensions from Description
+		// Example: "經向及緯向解析度均為0.03度"
+		let resMatch = description.match(/解析度均為([\d\.]+)度/);
+		dx = parseFloat(resMatch[1]);
 		
-		valid_time = new Date(parameter[2]['parameterValue']);
+		let dimMatch = description.match(/(\d+)\*(\d+)/);
+		nx = parseInt(dimMatch[1], 10)+fix;
+		ny = parseInt(dimMatch[2], 10);
+
+		size = dx * 200;
+		valid_time = new Date(dataset['DataTime']['DateTime']);
 		d3.select('#info').html('<b>' + valid_time.toLocaleString() + '</b>');
+
+		unit = description.includes('攝氏') ? '℃' : 'mm';
 		
-		nx_ny = parameter[3]['parameterValue'].split('*');
-		nx = parseInt(nx_ny[0], 10)+fix;
-		ny = parseInt(nx_ny[1], 10);
-		
-		unit = parameter[4]['parameterValue'].replace('攝氏', '℃');
+		let contentStr = resource['Content'].replace(/\s/g, ''); // Remove whitespace/newlines
+		if (contentStr.endsWith(',')) {
+			contentStr = contentStr.slice(0, -1);
+		}
+		data_content = contentStr.split(',');
 	} else {
 		//新版格式 For衛星中心
-		parameter = data['cwaopendata']['dataset']['datasetInfo']['parameterSet'];
+		parameter = dataset['datasetInfo']['parameterSet'];
 		
 		lon0 = parseFloat(parameter['StartPointLongitude']);
 		lat0 = parseFloat(parameter['StartPointLatitude']);
@@ -212,9 +225,9 @@ function data_proc(data, nan_value, type, fix=0) {
 		ny = parseInt(parameter['GridDimensionY'], 10);
 		
 		unit = parameter.hasOwnProperty("Precipitation") ? parameter['Precipitation'] : parameter['Reflectivity'];
+		data_content = dataset['contents']['content'].split(',');
 	}
 	
-	data_content = data['cwaopendata']['dataset']['contents']['content'].split(',');
 	x = 0;
 	y = 0;
 	data_content.forEach(function(value){
@@ -331,9 +344,9 @@ function plot_wind_data(data) {
 		.text(function(d){return d['data']})
 		.on("mouseover", function(d) {
 			if (is_shift) {
-				window.open('https://246.swcb.gov.tw/Info/RainGraph?stid=' + d['sta'],'win1','width=1000,height=600');
+				//window.open('https://246.ardswc.gov.tw/Info/RainGraph?stid=' + d['sta'],'win1','width=1000,height=600');
 			} else if (is_ctrl) {
-				window.open('https://www.cwb.gov.tw/V8/C/W/OBS_Station.html?ID=' + d['sta'].substr(0, 5),'win2','width=1000,height=800');
+				window.open('https://www.cwa.gov.tw/V8/C/W/OBS_Station.html?ID=' + d['sta'].substr(0, 5),'win2','width=1000,height=800');
 			} else {
 				d3.select('#tooltip').style('opacity', 1).html('<div class="custom_tooltip">' + d['tooltip'] + '</div>');
 			}
@@ -365,9 +378,9 @@ function plot_sta_data(data) {
 		.text(function(d){return d['data']})
 		.on("mouseover", function(d) {
 			if (is_shift) {
-				window.open('https://246.swcb.gov.tw/Info/RainGraph?stid=' + d['sta'],'win1','width=1000,height=600');
+				//window.open('https://246.ardswc.gov.tw/Info/RainGraph?stid=' + d['sta'],'win1','width=1000,height=600');
 			} else if (is_ctrl) {
-				window.open('https://www.cwb.gov.tw/V8/C/W/OBS_Station.html?ID=' + d['sta'].substr(0, 5),'win2','width=1000,height=800');
+				window.open('https://www.cwa.gov.tw/V8/C/W/OBS_Station.html?ID=' + d['sta'].substr(0, 5),'win2','width=1000,height=800');
 			} else {
 				d3.select('#tooltip').style('opacity', 1).html('<div class="custom_tooltip">' + d['tooltip'] + '</div>');
 			}
